@@ -5,3 +5,10 @@ version = 3
 [[package]]
 name = "oca_conductor"
 version = "0.0.1"
+dependencies = [
+ "zip_resolver",
+]
+
+[[package]]
+name = "zip_resolver"
+version = "0.1.0"
