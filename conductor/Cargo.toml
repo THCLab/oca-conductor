@@ -11,3 +11,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 
 zip_resolver = { path = "../zip_resolver" }
+oca-rust = "0.1.42"
+serde_json = "1.0.82"
+serde = { version = "1.0", features = ["derive"] }
+regex = "1"

@@ -403,6 +403,10 @@ dependencies = [
 name = "oca_conductor"
 version = "0.0.1"
 dependencies = [
+ "oca-rust",
+ "regex",
+ "serde",
+ "serde_json",
  "zip_resolver",
 ]
 
