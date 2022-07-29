@@ -1,0 +1,19 @@
+[package]
+name = "oca-conductor-node"
+version = "0.1.0"
+edition = "2021"
+exclude = ["*.node"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2.6.3", features = ["serde-json"] }
+napi-derive = "2.6.0"
+oca-rust = "0.1.42"
+oca_conductor = { path = "../../conductor" }
+zip_resolver = { path = "../../zip_resolver" }
+serde_json = "1.0.82"
+
+[build-dependencies]
+napi-build = "2.0.1"

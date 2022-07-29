@@ -4,8 +4,8 @@ use serde_json::Value;
 
 mod validator;
 
-pub struct OCAConductor<'a> {
-    pub oca: &'a OCA,
+pub struct OCAConductor {
+    pub oca: OCA,
     validator: validator::OCAValidator,
     constraints_config: Option<ConstraintsConfig>,
     pub data_sets: Vec<Value>,
@@ -13,13 +13,13 @@ pub struct OCAConductor<'a> {
 
 #[derive(Clone)]
 pub struct ConstraintsConfig {
-    fail_on_additional_attributes: bool,
+    pub fail_on_additional_attributes: bool,
 }
 
 #[derive(Serialize)]
 pub struct ValidationResult {
-    success: bool,
-    errors: Vec<String>,
+    pub success: bool,
+    pub errors: Vec<String>,
 }
 
 impl Default for ValidationResult {
@@ -47,11 +47,12 @@ impl ValidationResult {
     }
 }
 
-impl OCAConductor<'_> {
-    pub fn load_oca(oca: &OCA) -> OCAConductor {
+impl OCAConductor {
+    pub fn load_oca(oca: OCA) -> OCAConductor {
+        let validator = validator::OCAValidator::new(&oca);
         OCAConductor {
             oca,
-            validator: validator::OCAValidator::new(oca),
+            validator,
             constraints_config: None,
             data_sets: vec![],
         }
@@ -98,7 +99,7 @@ mod tests {
     #[test]
     fn validation_of_proper_data_set_should_return_successful_validation_result() {
         let oca = setup_oca();
-        let mut oca_conductor = OCAConductor::load_oca(&oca);
+        let mut oca_conductor = OCAConductor::load_oca(oca);
         oca_conductor.add_data_set(
             r#"[
                 {

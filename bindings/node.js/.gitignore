@@ -1,0 +1,6 @@
+build/
+node_modules/
+index.js
+index.d.ts
+*.node
+Cargo.lock
