@@ -1,6 +1,9 @@
 use oca_rust::state::oca::OCA;
+use oca_rust::state::oca::overlay;
 use serde::Serialize;
 use serde_json::Value;
+use serde_json::Map;
+use std::collections::BTreeMap;
 
 mod validator;
 
@@ -81,6 +84,42 @@ impl OCAConductor {
 
         result
     }
+
+    pub fn transform_data(&self, _overlays: Vec<String>) -> Vec<Value> {
+        let mut transformed_data_set = vec![];
+
+        let mut attribute_mappings: Option<BTreeMap<&String, &String>> = None;
+
+        for overlay in &self.oca.overlays {
+            if overlay.overlay_type().contains("/mapping/") {
+                let ov = overlay
+                    .as_any()
+                    .downcast_ref::<overlay::AttributeMapping>()
+                    .unwrap();
+                let keys = ov.attr_mapping.keys().clone();
+                let values = ov.attr_mapping.values().clone();
+                attribute_mappings = Some(values.into_iter().zip(keys.into_iter()).collect());
+            }
+        }
+
+        for data_set in &self.data_sets {
+            let data_set_map = data_set.as_object().unwrap();
+            let mut transformed_data = Map::new();
+            for (k, v) in data_set_map {
+                let mut key = k.to_string();
+                let value = v.clone();
+                if let Some(ref mappings) = attribute_mappings {
+                    if let Some(mapped_key) = mappings.get(k) {
+                        key = mapped_key.to_string();
+                    }
+                }
+                transformed_data.insert(key, value);
+            }
+
+            transformed_data_set.push(Value::Object(transformed_data));
+        }
+        transformed_data_set
+    }
 }
 
 #[cfg(test)]
@@ -94,6 +133,33 @@ mod tests {
         );
         assert!(oca_result.is_ok());
         oca_result.unwrap()
+    }
+
+    #[test]
+    fn transform_data() {
+        let oca = setup_oca();
+        println!(
+            "{}", serde_json::to_string_pretty(&oca).unwrap()
+        );
+        let mut oca_conductor = OCAConductor::load_oca(oca);
+        oca_conductor.add_data_set(
+            r#"[
+                {
+                    "e-mail*": "test@example.com",
+                    "licenses*": ["a"],
+                    "number": 24,
+                    "numbers": [22, "23"],
+                    "date": "01.01.1999",
+                    "dates": ["01.01.2000"],
+                    "bool": true,
+                    "bools": [false, true]
+                }
+            ]"#,
+        );
+        let data = oca_conductor.transform_data(vec![]);
+        println!(
+            "{}", serde_json::to_string_pretty(&data).unwrap()
+        )
     }
 
     #[test]
