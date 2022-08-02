@@ -89,6 +89,7 @@ impl OCAConductor {
         let mut transformed_data_set = vec![];
 
         let mut attribute_mappings: Option<BTreeMap<&String, &String>> = None;
+        let mut entry_code_mappings: Option<BTreeMap<String, BTreeMap<&str, &str>>> = None;
 
         for overlay in &self.oca.overlays {
             if overlay.overlay_type().contains("/mapping/") {
@@ -99,6 +100,22 @@ impl OCAConductor {
                 let keys = ov.attr_mapping.keys().clone();
                 let values = ov.attr_mapping.values().clone();
                 attribute_mappings = Some(values.into_iter().zip(keys.into_iter()).collect());
+            } else if overlay.overlay_type().contains("/entry_code_mapping/") {
+                let ov = overlay
+                    .as_any()
+                    .downcast_ref::<overlay::EntryCodeMapping>()
+                    .unwrap();
+                let mut entry_code_mappings_tmp = BTreeMap::new();
+
+                for (attr_name, value) in &ov.attr_mapping {
+                    let mut mappings = BTreeMap::new();
+                    for v in value {
+                        let splitted = v.split(':').collect::<Vec<&str>>();
+                        mappings.insert(*splitted.get(0).unwrap(), *splitted.get(1).unwrap());
+                    }
+                    entry_code_mappings_tmp.insert(attr_name.clone(), mappings);
+                }
+                entry_code_mappings = Some(entry_code_mappings_tmp);
             }
         }
 
@@ -107,10 +124,37 @@ impl OCAConductor {
             let mut transformed_data = Map::new();
             for (k, v) in data_set_map {
                 let mut key = k.to_string();
-                let value = v.clone();
+                let mut value = v.clone();
                 if let Some(ref mappings) = attribute_mappings {
                     if let Some(mapped_key) = mappings.get(k) {
                         key = mapped_key.to_string();
+                    }
+                }
+                if let Some(ref mappings) = entry_code_mappings {
+                    if let Some(mapped_entries) = mappings.get(k) {
+                        match value {
+                            Value::Array(ref values_vec) => {
+                                let mut mapped_values = vec![];
+                                for v in values_vec {
+                                    match mapped_entries.get(v.as_str().unwrap()) {
+                                      Some(mapped_entry) => {
+                                        mapped_values.push(Value::String(mapped_entry.to_string()));
+                                      },
+                                      None => {
+                                        mapped_values.push(v.clone());
+                                      }
+                                    }
+                                }
+                                value = Value::Array(mapped_values);
+                            },
+                            Value::String(_) => {
+                                if let Some(mapped_entry) = mapped_entries.get(value.as_str().unwrap()) {
+                                    value = Value::String(mapped_entry.to_string());
+                                };
+                            },
+                            _ => {}
+                        }
+
                     }
                 }
                 transformed_data.insert(key, value);
