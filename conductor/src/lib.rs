@@ -1,4 +1,5 @@
 use oca_rust::state::oca::OCA;
+use oca_rust::state::oca::DynOverlay;
 use oca_rust::state::oca::overlay;
 use serde::Serialize;
 use serde_json::Value;
@@ -85,14 +86,20 @@ impl OCAConductor {
         result
     }
 
-    pub fn transform_data(&self, _overlays: Vec<String>) -> Vec<Value> {
+    pub fn transform_data(&self, overlays: Vec<&str>) -> Vec<Value> {
         let mut transformed_data_set = vec![];
 
         let mut attribute_mappings: Option<BTreeMap<&String, &String>> = None;
         let mut entry_code_mappings: Option<BTreeMap<String, BTreeMap<&str, &str>>> = None;
 
-        for overlay in &self.oca.overlays {
-            if overlay.overlay_type().contains("/mapping/") {
+        let mut additional_overlays: Vec<DynOverlay> = vec![];
+
+        for overlay_str in overlays {
+            additional_overlays.push(serde_json::from_str(overlay_str).unwrap());
+        }
+
+        for overlay in &additional_overlays {
+            if attribute_mappings.is_none() && overlay.overlay_type().contains("/mapping/") {
                 let ov = overlay
                     .as_any()
                     .downcast_ref::<overlay::AttributeMapping>()
@@ -100,7 +107,35 @@ impl OCAConductor {
                 let keys = ov.attr_mapping.keys().clone();
                 let values = ov.attr_mapping.values().clone();
                 attribute_mappings = Some(values.into_iter().zip(keys.into_iter()).collect());
-            } else if overlay.overlay_type().contains("/entry_code_mapping/") {
+            } else if entry_code_mappings.is_none() && overlay.overlay_type().contains("/entry_code_mapping/") {
+                let ov = overlay
+                    .as_any()
+                    .downcast_ref::<overlay::EntryCodeMapping>()
+                    .unwrap();
+                let mut entry_code_mappings_tmp = BTreeMap::new();
+
+                for (attr_name, value) in &ov.attr_mapping {
+                    let mut mappings = BTreeMap::new();
+                    for v in value {
+                        let splitted = v.split(':').collect::<Vec<&str>>();
+                        mappings.insert(*splitted.get(0).unwrap(), *splitted.get(1).unwrap());
+                    }
+                    entry_code_mappings_tmp.insert(attr_name.clone(), mappings);
+                }
+                entry_code_mappings = Some(entry_code_mappings_tmp);
+            }
+        }
+
+        for overlay in &self.oca.overlays {
+            if attribute_mappings.is_none() && overlay.overlay_type().contains("/mapping/") {
+                let ov = overlay
+                    .as_any()
+                    .downcast_ref::<overlay::AttributeMapping>()
+                    .unwrap();
+                let keys = ov.attr_mapping.keys().clone();
+                let values = ov.attr_mapping.values().clone();
+                attribute_mappings = Some(values.into_iter().zip(keys.into_iter()).collect());
+            } else if entry_code_mappings.is_none() && overlay.overlay_type().contains("/entry_code_mapping/") {
                 let ov = overlay
                     .as_any()
                     .downcast_ref::<overlay::EntryCodeMapping>()
@@ -200,7 +235,30 @@ mod tests {
                 }
             ]"#,
         );
-        let data = oca_conductor.transform_data(vec![]);
+        let data = oca_conductor.transform_data(
+            vec![
+              r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/mapping/1.0",
+    "attr_mapping": {
+        "email*":"e-mail*"
+    }
+}
+              "#,
+              r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/entry_code_mapping/1.0",
+    "attr_mapping": {
+        "licenses*": [
+            "a:S","b:B","c:C","d:D","e:E"
+        ]
+    }
+}
+              "#
+            ]
+        );
         println!(
             "{}", serde_json::to_string_pretty(&data).unwrap()
         )
