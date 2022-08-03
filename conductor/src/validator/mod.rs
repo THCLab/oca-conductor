@@ -126,7 +126,7 @@ impl OCAValidator {
                                         validator.attr_name, value, format
                                     ));
                                 }
-                            },
+                            }
                             Err(_) => {
                                 errors.push(format!(
                                     "'{}' format definition is invalid",
@@ -205,8 +205,7 @@ impl OCAValidator {
                                 if conformance.eq("M") {
                                     errors.push(format!(
                                         "'{}' value ({}) cannot be empty",
-                                        validator.attr_name,
-                                        value
+                                        validator.attr_name, value
                                     ));
                                 }
                             }
