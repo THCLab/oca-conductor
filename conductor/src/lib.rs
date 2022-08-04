@@ -1,9 +1,12 @@
 use oca_rust::state::oca::{DynOverlay, OCA};
+use said::derivation::SelfAddressing;
 use serde::Serialize;
 use serde_json::Value;
 
+pub mod transformation_result;
 mod transformator;
 mod validator;
+use transformation_result::TransformationResult;
 
 pub struct OCAConductor {
     pub oca: OCA,
@@ -83,20 +86,45 @@ impl OCAConductor {
         result
     }
 
-    pub fn transform_data(&self, overlays: Vec<&str>) -> Vec<Value> {
+    pub fn transform_data(&self, overlays: Vec<&str>) -> TransformationResult {
+        let mut transformation_result = TransformationResult::new();
+
         let mut additional_overlays: Vec<DynOverlay> = vec![];
 
-        for overlay_str in overlays {
-            additional_overlays.push(serde_json::from_str(overlay_str).unwrap());
-
-            // TODO: validate if provided overlay has correct capture_base SAI
+        let cb_json = serde_json::to_string(&self.oca.capture_base).unwrap();
+        let oca_cb_sai = format!("{}", SelfAddressing::Blake3_256.derive(cb_json.as_bytes()));
+        for (i, overlay_str) in overlays.iter().enumerate() {
+            match serde_json::from_str::<DynOverlay>(overlay_str) {
+                Ok(mut overlay) => {
+                    if oca_cb_sai.eq(overlay.capture_base()) {
+                        additional_overlays.push(overlay);
+                    } else {
+                        transformation_result.add_error(format!(
+                            "Overlay at position {}: Incompatible with OCA Capture Base.",
+                            i + 1
+                        ))
+                    }
+                }
+                Err(_) => transformation_result.add_error(format!(
+                    "Overlay at position {}: Parsing failed. Invalid format.",
+                    i + 1
+                )),
+            }
         }
 
-        transformator::transform_data(
+        if !transformation_result.success {
+            return transformation_result;
+        }
+
+        let result = transformator::transform_data(
             &self.oca.overlays,
             additional_overlays,
             self.data_sets.clone(),
-        )
+        );
+
+        transformation_result.add_data_sets(result);
+
+        transformation_result
     }
 }
 
@@ -124,7 +152,7 @@ mod tests {
                 }
             ]"#,
         );
-        let data = oca_conductor.transform_data(vec![
+        let transformation_result = oca_conductor.transform_data(vec![
             r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
@@ -136,7 +164,13 @@ mod tests {
               "#,
         ]);
 
-        assert!(data.get(0).unwrap().get("email*").is_some())
+        assert!(transformation_result
+            .result
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .get("email*")
+            .is_some())
     }
 
     #[test]
@@ -150,7 +184,7 @@ mod tests {
                 }
             ]"#,
         );
-        let data = oca_conductor.transform_data(vec![
+        let transformation_result = oca_conductor.transform_data(vec![
             r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
@@ -165,7 +199,10 @@ mod tests {
         ]);
 
         assert_eq!(
-            data.get(0)
+            transformation_result
+                .result
+                .unwrap()
+                .get(0)
                 .unwrap()
                 .get("licenses*")
                 .unwrap()
@@ -173,6 +210,22 @@ mod tests {
                 .unwrap(),
             "A"
         );
+    }
+
+    #[test]
+    fn transform_data_with_invalid_overlay() {
+        let oca = setup_oca();
+        let mut oca_conductor = OCAConductor::load_oca(oca);
+        oca_conductor.add_data_set(
+            r#"[
+                {
+                    "e-mail*": "test@example.com"
+                }
+            ]"#,
+        );
+        let transformation_result = oca_conductor.transform_data(vec![r#"invalid"#]);
+
+        assert!(!transformation_result.success)
     }
 
     #[test]
