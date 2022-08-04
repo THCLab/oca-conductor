@@ -3,6 +3,7 @@ use napi_derive::napi;
 use oca_conductor::ConstraintsConfig;
 use oca_conductor::OCAConductor;
 use oca_conductor::validation_result::ValidationResult;
+use oca_conductor::transformation_result::TransformationResult;
 use oca_rust::state::oca::OCA;
 
 #[napi]
@@ -52,6 +53,11 @@ impl OcaConductorWrapper {
         ValidationResultWrapper::init(self.base.validate())
     }
 
+    #[napi(ts_return_type = "TransformationResult")]
+    pub fn transform_data(&self, overlays: Vec<&str>) -> TransformationResultWrapper {
+        TransformationResultWrapper::init(self.base.transform_data(overlays))
+    }
+
     fn update_state(&mut self) {
         self.data_sets = self.base.data_sets.clone();
     }
@@ -81,6 +87,24 @@ impl ValidationResultWrapper {
         Self {
             success: base.success,
             errors: base.errors,
+        }
+    }
+}
+
+#[napi(object, js_name = "TransformationResult")]
+pub struct TransformationResultWrapper {
+    pub success: bool,
+    pub errors: Option<Vec<String>>,
+    #[napi(ts_type = "Array<object>")]
+    pub result: Option<Vec<serde_json::Value>>,
+}
+
+impl TransformationResultWrapper {
+    fn init(base: TransformationResult) -> Self {
+        Self {
+            success: base.success,
+            errors: base.errors,
+            result: base.result,
         }
     }
 }
