@@ -18,6 +18,7 @@ pub fn resolve_from_zip(env: Env, path: String) -> Result<napi::JsObject> {
 #[napi(js_name = "OcaConductor")]
 pub struct OcaConductorWrapper {
     base: OCAConductor,
+    #[napi(ts_type = "Array<object>")]
     pub data_sets: Vec<serde_json::Value>,
 }
 
