@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use oca_conductor::ConstraintsConfig;
 use oca_conductor::OCAConductor;
-use oca_conductor::ValidationResult;
+use oca_conductor::validation_result::ValidationResult;
 use oca_rust::state::oca::OCA;
 
 #[napi]

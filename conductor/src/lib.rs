@@ -1,12 +1,13 @@
 use oca_rust::state::oca::{DynOverlay, OCA};
 use said::derivation::SelfAddressing;
-use serde::Serialize;
 use serde_json::Value;
 
 pub mod transformation_result;
 mod transformator;
+pub mod validation_result;
 mod validator;
 use transformation_result::TransformationResult;
+use validation_result::ValidationResult;
 
 pub struct OCAConductor {
     pub oca: OCA,
@@ -18,37 +19,6 @@ pub struct OCAConductor {
 #[derive(Clone)]
 pub struct ConstraintsConfig {
     pub fail_on_additional_attributes: bool,
-}
-
-#[derive(Serialize)]
-pub struct ValidationResult {
-    pub success: bool,
-    pub errors: Vec<String>,
-}
-
-impl Default for ValidationResult {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ValidationResult {
-    pub fn new() -> ValidationResult {
-        ValidationResult {
-            success: true,
-            errors: vec![],
-        }
-    }
-
-    pub fn add_error(&mut self, error: String) {
-        self.success = false;
-        self.errors.push(error);
-    }
-
-    pub fn add_errors(&mut self, errors: Vec<String>) {
-        self.success = false;
-        self.errors.extend(errors);
-    }
 }
 
 impl OCAConductor {
