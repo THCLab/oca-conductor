@@ -1,9 +1,12 @@
+#![allow(dead_code)]
+
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
+use oca_conductor::data_set_loader::json_data_set::JSONDataSet;
+use oca_conductor::transformation_result::TransformationResult;
+use oca_conductor::validation_result::ValidationResult;
 use oca_conductor::ConstraintsConfig;
 use oca_conductor::OCAConductor;
-use oca_conductor::validation_result::ValidationResult;
-use oca_conductor::transformation_result::TransformationResult;
 use oca_rust::state::oca::OCA;
 
 #[napi]
@@ -42,10 +45,9 @@ impl OcaConductorWrapper {
     #[napi]
     pub fn add_data_set(
         &mut self,
-        #[napi(ts_arg_type = "object | object[]")] data_set: serde_json::Value,
+        #[napi(ts_arg_type = "JSONDataSet")] data_set: &JSONDataSetWrapper,
     ) {
-        self.base
-            .add_data_set(serde_json::to_string(&data_set).unwrap().as_str());
+        self.base.add_data_set(data_set.to_base());
         self.update_state();
     }
 
@@ -61,6 +63,27 @@ impl OcaConductorWrapper {
 
     fn update_state(&mut self) {
         self.data_sets = self.base.data_sets.clone();
+    }
+}
+
+#[napi(js_name = "JSONDataSet")]
+pub struct JSONDataSetWrapper {
+    data_set: String,
+}
+
+#[napi]
+impl JSONDataSetWrapper {
+    #[napi(constructor)]
+    pub fn new(#[napi(ts_arg_type = "object | object[]")] data_set: serde_json::Value) -> Self {
+        Self {
+            data_set: serde_json::to_string(&data_set).unwrap(),
+        }
+    }
+
+    fn to_base(&self) -> JSONDataSet {
+        JSONDataSet {
+            data_set: self.data_set.clone(),
+        }
     }
 }
 

@@ -1,17 +1,19 @@
 import { expect } from "chai"
-import { resolveFromZip, OcaConductor } from ".."
+import { resolveFromZip, OcaConductor, JSONDataSet } from ".."
 
 describe("OCAConductor", () => {
   describe("#transform_data()", () => {
     it("should return successful transformation result when transformation is valid", () => {
       const oca = resolveFromZip(`${__dirname}/../../../assets/oca_bundle.zip`)
       const conductor = OcaConductor.loadOca(oca)
-      conductor.addDataSet([
-          {
-            "e-mail*": "test@example.com",
-            "licenses*": ["a"]
-          }
-      ])
+      conductor.addDataSet(
+        new JSONDataSet([
+            {
+              "e-mail*": "test@example.com",
+              "licenses*": ["a"]
+            }
+        ])
+      )
       const result = conductor.transformData([
         `
 {

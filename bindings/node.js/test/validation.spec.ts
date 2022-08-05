@@ -1,5 +1,5 @@
 import { expect } from "chai"
-import { resolveFromZip, OcaConductor } from ".."
+import { resolveFromZip, OcaConductor, JSONDataSet } from ".."
 
 describe("OCAConductor", () => {
   describe("#loadOca()", () => {
@@ -15,7 +15,8 @@ describe("OCAConductor", () => {
     it("should return successful validation result when data set is valid", () => {
       const oca = resolveFromZip(`${__dirname}/../../../assets/oca_bundle.zip`)
       const conductor = OcaConductor.loadOca(oca)
-      conductor.addDataSet([
+      conductor.addDataSet(
+        new JSONDataSet([
           {
             "email*": "test@example.com",
             "licenses*": ["A"],
@@ -26,7 +27,8 @@ describe("OCAConductor", () => {
             "bool": true,
             "bools": [false, true]
           }
-      ])
+        ])
+      )
       const result = conductor.validate()
       expect(result.success).to.be.true
     })
