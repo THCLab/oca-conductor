@@ -2,7 +2,7 @@
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use oca_conductor::data_set_loader::json_data_set::JSONDataSet;
+use oca_conductor::data_set_loader::{csv_data_set::CSVDataSet, json_data_set::JSONDataSet};
 use oca_conductor::transformation_result::TransformationResult;
 use oca_conductor::validation_result::ValidationResult;
 use oca_conductor::ConstraintsConfig;
@@ -45,9 +45,20 @@ impl OcaConductorWrapper {
     #[napi]
     pub fn add_data_set(
         &mut self,
-        #[napi(ts_arg_type = "JSONDataSet")] data_set: &JSONDataSetWrapper,
+        #[napi(ts_arg_type = "JSONDataSet | CSVDataSet")] data_set: &DataSetLoaderRouter,
     ) {
-        self.base.add_data_set(data_set.to_base());
+        match data_set.t {
+            DataSetType::CSVDataSet => {
+                self.base.add_data_set(CSVDataSet {
+                    data_set: data_set.data_set.clone(),
+                });
+            }
+            DataSetType::JSONDataSet => {
+                self.base.add_data_set(JSONDataSet {
+                    data_set: data_set.data_set.clone(),
+                });
+            }
+        }
         self.update_state();
     }
 
@@ -74,15 +85,41 @@ pub struct JSONDataSetWrapper {
 #[napi]
 impl JSONDataSetWrapper {
     #[napi(constructor)]
-    pub fn new(#[napi(ts_arg_type = "object | object[]")] data_set: serde_json::Value) -> Self {
-        Self {
+    pub fn new(
+        #[napi(ts_arg_type = "object | object[]")] data_set: serde_json::Value,
+    ) -> DataSetLoaderRouter {
+        DataSetLoaderRouter {
+            t: DataSetType::JSONDataSet,
             data_set: serde_json::to_string(&data_set).unwrap(),
         }
     }
+}
 
-    fn to_base(&self) -> JSONDataSet {
-        JSONDataSet {
-            data_set: self.data_set.clone(),
+pub enum DataSetType {
+    JSONDataSet,
+    CSVDataSet,
+}
+
+#[napi]
+pub struct DataSetLoaderRouter {
+    t: DataSetType,
+    data_set: String,
+}
+
+#[napi(js_name = "CSVDataSet")]
+pub struct CSVDataSetWrapper {
+    data_set: String,
+}
+
+#[napi]
+impl CSVDataSetWrapper {
+    #[napi(constructor)]
+    pub fn new(
+        #[napi(ts_arg_type = "string[][]")] data_set: serde_json::Value,
+    ) -> DataSetLoaderRouter {
+        DataSetLoaderRouter {
+            t: DataSetType::CSVDataSet,
+            data_set: serde_json::to_string(&data_set).unwrap(),
         }
     }
 }
