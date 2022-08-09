@@ -92,7 +92,10 @@ impl OCAConductor {
             self.data_sets.clone(),
         );
 
-        transformation_result.add_data_sets(result);
+        match result {
+            Ok(data_sets) => transformation_result.add_data_sets(data_sets),
+            Err(errors) => transformation_result.add_errors(errors)
+        }
 
         transformation_result
     }
@@ -181,6 +184,40 @@ mod tests {
                 .unwrap(),
             "A"
         );
+    }
+
+    #[test]
+    fn transform_data_with_unit_overlay() {
+        let oca = setup_oca();
+        let mut oca_conductor = OCAConductor::load_oca(oca);
+        oca_conductor.add_data_set(JSONDataSet::new(
+            r#"[
+                    {
+                        "number": 3.2808
+                    }
+                ]"#,
+        ));
+        let transformation_result = oca_conductor.transform_data(vec![
+            r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/unit/1.0",
+    "metric_system":"IU",
+    "attr_units":{"number":"ft"}
+}
+              "#,
+        ]);
+
+        assert_eq!(transformation_result
+            .result
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .get("number"),
+            Some(&Value::Number(
+                serde_json::value::Number::from_f64(100.0).unwrap()
+            ))
+        )
     }
 
     #[test]
