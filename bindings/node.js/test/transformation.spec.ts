@@ -19,7 +19,7 @@ describe("OCAConductor", () => {
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mappings": {
+    "attr_mapping": {
         "email*":"e-mail*"
     }
 }
@@ -28,7 +28,7 @@ describe("OCAConductor", () => {
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/entry_code_mapping/1.0",
-    "attr_mappings": {
+    "attr_entry_codes_mapping": {
         "licenses*": [
             "a:A","b:B","c:C","d:D","e:E"
         ]

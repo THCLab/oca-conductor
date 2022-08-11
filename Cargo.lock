@@ -701,9 +701,9 @@ dependencies = [
 
 [[package]]
 name = "oca-rust"
-version = "0.1.43"
+version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "750dc4fb2be2c8c56ec7e2520d8e5d51c13e7c67b6f97de748566ad4c7e3c1ec"
+checksum = "c3b4dc2e1a681c08a0636ff568d62d94a3b910e90ef4144ececcb6d596668601"
 dependencies = [
  "erased-serde",
  "indexmap",
