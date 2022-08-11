@@ -193,10 +193,10 @@ fn get_attribute_mappings(overlay: &DynOverlay) -> Option<BTreeMap<String, Strin
             .downcast_ref::<overlay::AttributeMapping>()
             .unwrap();
         return Some(
-            ov.attr_mapping
+            ov.attr_mappings
                 .values()
                 .cloned()
-                .zip(ov.attr_mapping.keys().cloned())
+                .zip(ov.attr_mappings.keys().cloned())
                 .collect(),
         );
     }
@@ -213,7 +213,7 @@ fn get_entry_code_mappings(
             .unwrap();
         let mut entry_code_mappings_tmp = BTreeMap::new();
 
-        for (attr_name, value) in &ov.attr_mapping {
+        for (attr_name, value) in &ov.attr_entry_codes_mappings {
             let mut mappings = BTreeMap::new();
             for v in value {
                 let splitted = v.split(':').collect::<Vec<&str>>();

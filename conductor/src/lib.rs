@@ -131,7 +131,7 @@ mod tests {
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attr_mappings": {
         "email*":"e-mail*"
     }
 }
@@ -163,7 +163,7 @@ mod tests {
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/entry_code_mapping/1.0",
-    "attr_mapping": {
+    "attr_entry_codes_mappings": {
         "licenses*": [
             "a:A","b:B","c:C","d:D","e:E"
         ]
