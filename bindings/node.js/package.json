@@ -1,6 +1,6 @@
 {
   "name": "oca-conductor",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Node bindings to oca-conductor (Rust)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
