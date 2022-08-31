@@ -1,21 +1,21 @@
 use oca_rust::state::oca::{DynOverlay, OCA};
 use said::derivation::SelfAddressing;
-use serde_json::Value;
 
-pub mod data_set_loader;
-use data_set_loader::DataSetLoader;
+pub mod data_set;
+use data_set::DataSet;
 pub mod transformation_result;
 mod transformator;
 pub mod validation_result;
 mod validator;
 use transformation_result::TransformationResult;
 use validation_result::ValidationResult;
+mod errors;
 
 pub struct OCAConductor {
     pub oca: OCA,
     validator: validator::OCAValidator,
     constraints_config: Option<ConstraintsConfig>,
-    pub data_sets: Vec<Value>,
+    pub data_sets: Vec<Box<dyn DataSet>>,
 }
 
 #[derive(Clone)]
@@ -39,17 +39,17 @@ impl OCAConductor {
         self.constraints_config = Some(config);
     }
 
-    pub fn add_data_set<T>(&mut self, data_set_loader: T)
+    pub fn add_data_set<T: 'static>(&mut self, data_set: T)
     where
-        T: DataSetLoader,
+        T: DataSet,
     {
-        self.data_sets.extend(data_set_loader.load());
+        self.data_sets.push(Box::new(data_set));
     }
 
     pub fn validate(&self) -> ValidationResult {
         let mut result = ValidationResult::new();
 
-        if let Err(errors) = self.validator.validate(self.data_sets.clone()) {
+        if let Err(errors) = self.validator.validate(&self.data_sets) {
             result.add_errors(errors);
         }
 
@@ -86,15 +86,11 @@ impl OCAConductor {
             return transformation_result;
         }
 
-        let result = transformator::transform_data(
-            &self.oca.overlays,
-            additional_overlays,
-            self.data_sets.clone(),
-        );
+        let result = transformator::transform_data(&self.oca, additional_overlays, &self.data_sets);
 
         match result {
             Ok(data_sets) => transformation_result.add_data_sets(data_sets),
-            Err(errors) => transformation_result.add_errors(errors)
+            Err(errors) => transformation_result.add_errors(errors),
         }
 
         transformation_result
@@ -104,7 +100,9 @@ impl OCAConductor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use data_set_loader::json_data_set::JSONDataSet;
+    use data_set::csv_data_set::CSVDataSet;
+    use data_set::json_data_set::JSONDataSet;
+    use serde_json::Value;
 
     fn setup_oca() -> OCA {
         let common_assets_dir_path = format!("{}/../assets", env!("CARGO_MANIFEST_DIR"));
@@ -118,14 +116,14 @@ mod tests {
     #[test]
     fn transform_data_with_attribute_mapping_overlay() {
         let oca = setup_oca();
+        let attribute_types = oca.capture_base.attributes.clone();
         let mut oca_conductor = OCAConductor::load_oca(oca);
-        oca_conductor.add_data_set(JSONDataSet::new(
-            r#"[
-                    {
-                        "e-mail*": "test@example.com"
-                    }
-                ]"#,
+        oca_conductor.add_data_set(CSVDataSet::new(
+            r#"e-mail*
+test@example.com"#
+                .to_string(),
         ));
+
         let transformation_result = oca_conductor.transform_data(vec![
             r#"
 {
@@ -143,6 +141,9 @@ mod tests {
             .unwrap()
             .get(0)
             .unwrap()
+            .load(attribute_types)
+            .get(0)
+            .unwrap()
             .get("email*")
             .is_some())
     }
@@ -150,13 +151,15 @@ mod tests {
     #[test]
     fn transform_data_with_entry_code_mapping_overlay() {
         let oca = setup_oca();
+        let attribute_types = oca.capture_base.attributes.clone();
         let mut oca_conductor = OCAConductor::load_oca(oca);
         oca_conductor.add_data_set(JSONDataSet::new(
             r#"[
                     {
                         "licenses*": ["a"]
                     }
-                ]"#,
+                ]"#
+            .to_string(),
         ));
         let transformation_result = oca_conductor.transform_data(vec![
             r#"
@@ -178,6 +181,9 @@ mod tests {
                 .unwrap()
                 .get(0)
                 .unwrap()
+                .load(attribute_types)
+                .get(0)
+                .unwrap()
                 .get("licenses*")
                 .unwrap()
                 .get(0)
@@ -189,13 +195,15 @@ mod tests {
     #[test]
     fn transform_data_with_unit_overlay() {
         let oca = setup_oca();
+        let attribute_types = oca.capture_base.attributes.clone();
         let mut oca_conductor = OCAConductor::load_oca(oca);
         oca_conductor.add_data_set(JSONDataSet::new(
             r#"[
                     {
                         "number": 3.2808
                     }
-                ]"#,
+                ]"#
+            .to_string(),
         ));
         let transformation_result = oca_conductor.transform_data(vec![
             r#"
@@ -208,12 +216,16 @@ mod tests {
               "#,
         ]);
 
-        assert_eq!(transformation_result
-            .result
-            .unwrap()
-            .get(0)
-            .unwrap()
-            .get("number"),
+        assert_eq!(
+            transformation_result
+                .result
+                .unwrap()
+                .get(0)
+                .unwrap()
+                .load(attribute_types)
+                .get(0)
+                .unwrap()
+                .get("number"),
             Some(&Value::Number(
                 serde_json::value::Number::from_f64(100.0).unwrap()
             ))
@@ -229,7 +241,8 @@ mod tests {
                     {
                         "e-mail*": "test@example.com"
                     }
-                ]"#,
+                ]"#
+            .to_string(),
         ));
         let transformation_result = oca_conductor.transform_data(vec![r#"invalid"#]);
 
@@ -252,7 +265,8 @@ mod tests {
                         "bool": true,
                         "bools": [false, true]
                     }
-                ]"#,
+                ]"#
+            .to_string(),
         ));
         let validation_result = oca_conductor.validate();
         assert!(validation_result.success);

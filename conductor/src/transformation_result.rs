@@ -1,5 +1,5 @@
+use crate::data_set::DataSet;
 use serde::Serialize;
-use serde_json::Value;
 
 #[derive(Serialize)]
 pub struct TransformationResult {
@@ -7,7 +7,7 @@ pub struct TransformationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub result: Option<Vec<Value>>,
+    pub result: Option<Vec<Box<dyn DataSet>>>,
 }
 
 impl Default for TransformationResult {
@@ -47,7 +47,7 @@ impl TransformationResult {
         }
     }
 
-    pub fn add_data_sets(&mut self, data_sets: Vec<Value>) {
+    pub fn add_data_sets(&mut self, data_sets: Vec<Box<dyn DataSet>>) {
         self.result = Some(data_sets);
     }
 }

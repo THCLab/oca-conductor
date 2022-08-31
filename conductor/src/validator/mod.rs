@@ -2,14 +2,17 @@ use crate::ConstraintsConfig;
 use oca_rust::state::{attribute::AttributeType, entry_codes::EntryCodes, oca::overlay, oca::OCA};
 use regex::Regex;
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 mod attribute_validator;
 use attribute_validator::AttributeValidator;
 
+use crate::data_set::DataSet;
+
 pub struct OCAValidator {
     constraints_config: Option<ConstraintsConfig>,
     attribute_validators: HashMap<String, AttributeValidator>,
+    attribute_types: BTreeMap<String, String>,
 }
 
 impl OCAValidator {
@@ -17,6 +20,7 @@ impl OCAValidator {
         OCAValidator {
             constraints_config: None,
             attribute_validators: OCAValidator::parse_oca_attributes_to_validators(oca),
+            attribute_types: oca.capture_base.attributes.clone(),
         }
     }
 
@@ -24,7 +28,7 @@ impl OCAValidator {
         self.constraints_config = Some(config);
     }
 
-    pub fn validate(&self, data_sets: Vec<Value>) -> Result<(), Vec<String>> {
+    pub fn validate(&self, data_sets: &[Box<dyn DataSet>]) -> Result<(), Vec<String>> {
         let mut validation_errors: Vec<String> = vec![];
 
         let mandatory_attribute_names = self
@@ -40,41 +44,49 @@ impl OCAValidator {
             .map(|(attr_name, _)| attr_name)
             .collect::<Vec<&String>>();
 
-        for (record_index, record) in data_sets.iter().enumerate() {
-            let mut missing_attribute_names = mandatory_attribute_names.clone();
-            for (k, v) in record.as_object().unwrap().iter() {
-                missing_attribute_names.retain(|n| n.ne(&k));
+        for (data_set_index, data_set) in data_sets.iter().enumerate() {
+            for (record_index, record) in data_set
+                .load(self.attribute_types.clone())
+                .iter()
+                .enumerate()
+            {
+                let mut missing_attribute_names = mandatory_attribute_names.clone();
+                for (k, v) in record.as_object().unwrap().iter() {
+                    missing_attribute_names.retain(|n| n.ne(&k));
 
-                let attribute_validator = self.attribute_validators.get(k).ok_or_else(|| {
-                    format!(
-                        "Record {}: '{}' attribute doesn't occur in OCA",
-                        record_index, k
-                    )
-                });
-                match attribute_validator {
-                    Ok(validator) => {
-                        if let Err(errors) = self.validate_value(v, validator) {
-                            for error in errors {
-                                validation_errors
-                                    .push(format!("Record {}: {}", record_index, error));
+                    let attribute_validator = self.attribute_validators.get(k).ok_or_else(|| {
+                        format!(
+                            "Data Set: {}, Record {}: '{}' attribute doesn't occur in OCA",
+                            data_set_index, record_index, k
+                        )
+                    });
+                    match attribute_validator {
+                        Ok(validator) => {
+                            if let Err(errors) = self.validate_value(v, validator) {
+                                for error in errors {
+                                    validation_errors.push(format!(
+                                        "Data Set: {}, Record {}: {}",
+                                        data_set_index, record_index, error
+                                    ));
+                                }
                             }
                         }
-                    }
-                    Err(err) => {
-                        if let Some(config) = &self.constraints_config {
-                            if config.fail_on_additional_attributes {
-                                validation_errors.push(err);
+                        Err(err) => {
+                            if let Some(config) = &self.constraints_config {
+                                if config.fail_on_additional_attributes {
+                                    validation_errors.push(err);
+                                }
                             }
+                            continue;
                         }
-                        continue;
                     }
                 }
-            }
-            for missing_attribute_name in missing_attribute_names {
-                validation_errors.push(format!(
-                    "Record {}: '{}' attribute is missing",
-                    record_index, missing_attribute_name
-                ));
+                for missing_attribute_name in missing_attribute_names {
+                    validation_errors.push(format!(
+                        "Data Set {}, Record {}: '{}' attribute is missing",
+                        data_set_index, record_index, missing_attribute_name
+                    ));
+                }
             }
         }
 
