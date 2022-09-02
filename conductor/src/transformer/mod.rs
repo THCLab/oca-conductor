@@ -89,7 +89,7 @@ mod tests {
 
     fn setup_oca() -> OCA {
         let common_assets_dir_path = format!("{}/../assets", env!("CARGO_MANIFEST_DIR"));
-        let oca_result = zip_resolver::resolve_from_zip(
+        let oca_result = oca_zip_resolver::resolve_from_zip(
             format!("{}/oca_bundle.zip", common_assets_dir_path).as_str(),
         );
         assert!(oca_result.is_ok());

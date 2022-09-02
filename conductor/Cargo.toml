@@ -13,8 +13,6 @@ transformer = ["reqwest"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-
-zip_resolver = { path = "../zip_resolver" }
 csv = "1.1"
 oca-rust = "0.1.44"
 serde_json = { version = "1.0.82", features = ["preserve_order"] }
@@ -24,3 +22,6 @@ dyn-clone = "1.0.9"
 regex = "1"
 said = "0.1.2"
 reqwest = { version = "0.11", features = ["blocking", "json"], optional = true }
+
+[dev-dependencies]
+oca_zip_resolver = { path = "../zip_resolver" }

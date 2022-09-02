@@ -770,12 +770,21 @@ dependencies = [
  "dyn-clone",
  "erased-serde",
  "oca-rust",
+ "oca_zip_resolver",
  "regex",
  "reqwest",
  "said",
  "serde",
  "serde_json",
- "zip_resolver",
+]
+
+[[package]]
+name = "oca_zip_resolver"
+version = "0.1.0"
+dependencies = [
+ "oca-rust",
+ "serde_json",
+ "zip",
 ]
 
 [[package]]
@@ -1581,15 +1590,6 @@ dependencies = [
  "sha1",
  "time",
  "zstd",
-]
-
-[[package]]
-name = "zip_resolver"
-version = "0.1.0"
-dependencies = [
- "oca-rust",
- "serde_json",
- "zip",
 ]
 
 [[package]]

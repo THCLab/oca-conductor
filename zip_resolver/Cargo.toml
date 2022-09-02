@@ -1,5 +1,5 @@
 [package]
-name = "zip_resolver"
+name = "oca_zip_resolver"
 version = "0.1.0"
 edition = "2021"
 
