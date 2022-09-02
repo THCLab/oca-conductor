@@ -6,8 +6,8 @@ use std::collections::BTreeMap;
 pub fn transform_data(
     oca: &OCA,
     additional_overlays: Vec<DynOverlay>,
-    data_sets: &[Box<dyn DataSet>],
-) -> Result<Vec<Box<dyn DataSet>>, Vec<String>> {
+    data_set: Box<dyn DataSet>,
+) -> Result<Box<dyn DataSet>, Vec<String>> {
     let mut attribute_mappings: BTreeMap<String, String> = BTreeMap::new();
     let mut entry_code_mappings: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
     let mut source_units: BTreeMap<String, String> = BTreeMap::new();
@@ -103,24 +103,23 @@ pub fn transform_data(
         }
     }
 
-    let mut transformed_data_sets = vec![];
-    for data_set in data_sets {
-        let mut transformed_data_set = data_set.clone();
-        if !attribute_mappings.is_empty() {
-            transformed_data_set =
-                transformed_data_set.transform_schema(attribute_mappings.clone());
-        }
+    let mut transformed_data_set = data_set.clone();
+    if !attribute_mappings.is_empty() {
+        transformed_data_set = transformed_data_set
+            .transform_schema(attribute_mappings.clone())
+            .unwrap();
+    }
 
-        if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
-            transformed_data_set = transformed_data_set.transform_data(
+    if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
+        transformed_data_set = transformed_data_set
+            .transform_data(
                 oca,
                 entry_code_mappings.clone(),
                 unit_transformation_operations.clone(),
             )
-        }
-        transformed_data_sets.push(transformed_data_set);
+            .unwrap()
     }
-    Ok(transformed_data_sets)
+    Ok(transformed_data_set)
 }
 
 #[derive(Clone)]
@@ -175,7 +174,7 @@ fn get_entry_code_mappings(
             for v in value {
                 let splitted = v.split(':').collect::<Vec<&str>>();
                 mappings.insert(
-                    splitted.get(0).unwrap().to_string(),
+                    splitted.first().unwrap().to_string(),
                     splitted.get(1).unwrap().to_string(),
                 );
             }

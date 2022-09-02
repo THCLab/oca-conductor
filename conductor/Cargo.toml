@@ -5,12 +5,17 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+validator = []
+transformer = ["reqwest"]
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 
 zip_resolver = { path = "../zip_resolver" }
+csv = "1.1"
 oca-rust = "0.1.44"
 serde_json = { version = "1.0.82", features = ["preserve_order"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -18,4 +23,4 @@ erased-serde = "0.3.23"
 dyn-clone = "1.0.9"
 regex = "1"
 said = "0.1.2"
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.11", features = ["blocking", "json"], optional = true }

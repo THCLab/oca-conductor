@@ -1,4 +1,4 @@
-use crate::ConstraintsConfig;
+use crate::errors::GenericError;
 use oca_rust::state::{attribute::AttributeType, entry_codes::EntryCodes, oca::overlay, oca::OCA};
 use regex::Regex;
 use serde_json::Value;
@@ -9,17 +9,24 @@ use attribute_validator::AttributeValidator;
 
 use crate::data_set::DataSet;
 
-pub struct OCAValidator {
+pub struct Validator {
+    data_sets: Vec<Box<dyn DataSet>>,
     constraints_config: Option<ConstraintsConfig>,
     attribute_validators: HashMap<String, AttributeValidator>,
     attribute_types: BTreeMap<String, String>,
 }
 
-impl OCAValidator {
-    pub fn new(oca: &OCA) -> OCAValidator {
-        OCAValidator {
+#[derive(Clone)]
+pub struct ConstraintsConfig {
+    pub fail_on_additional_attributes: bool,
+}
+
+impl Validator {
+    pub fn new(oca: OCA) -> Self {
+        Self {
+            data_sets: vec![],
             constraints_config: None,
-            attribute_validators: OCAValidator::parse_oca_attributes_to_validators(oca),
+            attribute_validators: Self::parse_oca_attributes_to_validators(&oca),
             attribute_types: oca.capture_base.attributes.clone(),
         }
     }
@@ -28,8 +35,16 @@ impl OCAValidator {
         self.constraints_config = Some(config);
     }
 
-    pub fn validate(&self, data_sets: &[Box<dyn DataSet>]) -> Result<(), Vec<String>> {
-        let mut validation_errors: Vec<String> = vec![];
+    pub fn add_data_set<T: 'static>(&mut self, data_set: T) -> &mut Self
+    where
+        T: DataSet,
+    {
+        self.data_sets.push(Box::new(data_set));
+        self
+    }
+
+    pub fn validate(&self) -> Result<(), Vec<GenericError>> {
+        let mut validation_errors: Vec<GenericError> = vec![];
 
         let mandatory_attribute_names = self
             .attribute_validators
@@ -44,9 +59,9 @@ impl OCAValidator {
             .map(|(attr_name, _)| attr_name)
             .collect::<Vec<&String>>();
 
-        for (data_set_index, data_set) in data_sets.iter().enumerate() {
+        for (data_set_index, data_set) in self.data_sets.iter().enumerate() {
             for (record_index, record) in data_set
-                .load(self.attribute_types.clone())
+                .load(self.attribute_types.clone())?
                 .iter()
                 .enumerate()
             {
@@ -55,19 +70,19 @@ impl OCAValidator {
                     missing_attribute_names.retain(|n| n.ne(&k));
 
                     let attribute_validator = self.attribute_validators.get(k).ok_or_else(|| {
-                        format!(
+                        GenericError::from(format!(
                             "Data Set: {}, Record {}: '{}' attribute doesn't occur in OCA",
                             data_set_index, record_index, k
-                        )
+                        ))
                     });
                     match attribute_validator {
                         Ok(validator) => {
                             if let Err(errors) = self.validate_value(v, validator) {
                                 for error in errors {
-                                    validation_errors.push(format!(
+                                    validation_errors.push(GenericError::from(format!(
                                         "Data Set: {}, Record {}: {}",
                                         data_set_index, record_index, error
-                                    ));
+                                    )));
                                 }
                             }
                         }
@@ -82,10 +97,10 @@ impl OCAValidator {
                     }
                 }
                 for missing_attribute_name in missing_attribute_names {
-                    validation_errors.push(format!(
+                    validation_errors.push(GenericError::from(format!(
                         "Data Set {}, Record {}: '{}' attribute is missing",
                         data_set_index, record_index, missing_attribute_name
-                    ));
+                    )));
                 }
             }
         }
@@ -295,5 +310,33 @@ impl OCAValidator {
         }
 
         attribute_validators
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data_set::CSVDataSet;
+
+    fn setup_oca() -> OCA {
+        let common_assets_dir_path = format!("{}/../assets", env!("CARGO_MANIFEST_DIR"));
+        let oca_result = zip_resolver::resolve_from_zip(
+            format!("{}/oca_bundle.zip", common_assets_dir_path).as_str(),
+        );
+        assert!(oca_result.is_ok());
+        oca_result.unwrap()
+    }
+
+    #[test]
+    fn validation_of_proper_data_set_should_return_successful_validation_result() {
+        let oca = setup_oca();
+        let mut validator = Validator::new(oca);
+        validator.add_data_set(CSVDataSet::new(
+            r#"email*;licenses*;number;numbers;date;dates;bool;bools
+test@example.com;["A"];1;[22, "23"];01.01.1999;["01.01.2000"];true;[false, true]"#
+                .to_string(),
+        ));
+        let validation_result = validator.validate();
+        assert!(validation_result.is_ok());
     }
 }

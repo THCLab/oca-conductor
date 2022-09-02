@@ -1,14 +1,20 @@
 use crate::data_set::DataSet;
 use crate::errors::GenericError;
-use crate::transformator::Operation;
-use oca_rust::state::oca::OCA;
 use serde::{Serialize, Serializer};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use std::collections::BTreeMap;
+
+#[cfg(feature = "transformer")]
+use crate::transformer::data_set_transformer::Operation;
+#[cfg(feature = "transformer")]
+use oca_rust::state::oca::OCA;
+#[cfg(feature = "transformer")]
+use serde_json::Map;
 
 #[derive(Clone)]
 pub struct CSVDataSet {
-    pub plain: String,
+    pub raw: String,
+    delimiter: char,
 }
 
 impl Serialize for CSVDataSet {
@@ -16,20 +22,31 @@ impl Serialize for CSVDataSet {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.plain)
+        serializer.serialize_str(&self.raw)
     }
 }
 
 impl DataSet for CSVDataSet {
-    fn new(plain: String) -> Self {
-        Self { plain }
+    fn new(raw: String) -> Self {
+        Self {
+            raw,
+            delimiter: ';',
+        }
     }
 
-    fn load(&self, attribute_types: BTreeMap<String, String>) -> Vec<Value> {
+    fn get_raw(&self) -> String {
+        self.raw.clone()
+    }
+
+    fn load(
+        &self,
+        attribute_types: BTreeMap<String, String>,
+    ) -> Result<Vec<Value>, Vec<GenericError>> {
+        let mut errors = vec![];
         let mut rows_value = vec![];
-        for line in self.plain.lines() {
+        for line in self.raw.lines() {
             rows_value.push(Value::Array(
-                line.split(',')
+                line.split(self.delimiter)
                     .map(|el| Value::String(el.to_string()))
                     .collect(),
             ))
@@ -51,37 +68,59 @@ impl DataSet for CSVDataSet {
                         let attribute_type = attribute_types
                             .get(&header_row.get(i).unwrap().to_string())
                             .unwrap();
-                        Self::parse_value(v, attribute_type).unwrap()
+                        match Self::parse_value(v, attribute_type) {
+                            Ok(parsed) => parsed,
+                            Err(e) => {
+                                errors.push(e);
+                                Value::Null
+                            }
+                        }
                     })
                     .collect();
                 result.push(header_row.iter().cloned().zip(row.clone()).collect());
             }
         }
-        result
-    }
-
-    fn transform_schema(&self, mappings: BTreeMap<String, String>) -> Box<dyn DataSet> {
-        let mut plain = self.plain.clone();
-        let header_op = plain.lines().take(1).next();
-        if let Some(header) = header_op {
-            let mut new_header = header.to_string();
-            for (k, v) in mappings {
-                new_header = header.replace(k.as_str(), v.as_str());
-            }
-            plain = plain.replace(header, new_header.as_str());
+        if !errors.is_empty() {
+            return Err(errors);
         }
-        Box::new(Self::new(plain))
+        Ok(result)
     }
 
+    #[cfg(feature = "transformer")]
+    fn transform_schema(
+        &self,
+        mappings: BTreeMap<String, String>,
+    ) -> Result<Box<dyn DataSet>, GenericError> {
+        let mut transformed_raw = self.raw.clone();
+        if let Some(header_line) = transformed_raw.lines().take(1).next() {
+            let headers = header_line
+                .split(self.delimiter)
+                .map(|header| match mappings.get(header) {
+                    Some(mapping) => mapping,
+                    None => header,
+                })
+                .collect::<Vec<&str>>();
+            transformed_raw = headers.join(&self.delimiter.to_string())
+                + "\n"
+                + &transformed_raw
+                    .lines()
+                    .skip(1)
+                    .collect::<Vec<&str>>()
+                    .join("\n");
+        }
+        Ok(Box::new(Self::new(transformed_raw)))
+    }
+
+    #[cfg(feature = "transformer")]
     fn transform_data(
         &self,
         oca: &OCA,
         entry_code_mappings: BTreeMap<String, BTreeMap<String, String>>,
         unit_transformation_operations: BTreeMap<String, Vec<Operation>>,
-    ) -> Box<dyn DataSet> {
+    ) -> Result<Box<dyn DataSet>, Vec<GenericError>> {
         let mut transformed_data_set = vec![];
 
-        for record in self.load(oca.capture_base.attributes.clone()) {
+        for record in self.load(oca.capture_base.attributes.clone())? {
             let record_map = record.as_object().unwrap();
             let mut transformed_data = Map::new();
             for (k, v) in record_map {
@@ -128,9 +167,29 @@ impl DataSet for CSVDataSet {
             transformed_data_set.push(Value::Object(transformed_data));
         }
 
-        Box::new(Self::new(
-            serde_json::to_string(&Value::Array(transformed_data_set)).unwrap(),
-        ))
+        let mut data = String::new();
+        for (i, record_val) in transformed_data_set.iter().enumerate() {
+            if let Value::Object(record) = record_val {
+                if i == 0 {
+                    data.push_str(
+                        &record
+                            .keys()
+                            .map(|v| v.to_string())
+                            .collect::<Vec<String>>()
+                            .join(&self.delimiter.to_string()),
+                    );
+                }
+                let line = String::from("\n")
+                    + &record
+                        .values()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<String>>()
+                        .join(&self.delimiter.to_string());
+                data.push_str(&line);
+            }
+        }
+
+        Ok(Box::new(Self::new(data)))
     }
 }
 
@@ -142,7 +201,7 @@ impl CSVDataSet {
                 "Text" => Value::String(value_str),
                 "Array[Text]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.replace('|', ",").as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())?
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("{} value is not an array", value_str))
@@ -155,7 +214,7 @@ impl CSVDataSet {
                 "Numeric" => Value::Number(value_str.parse()?),
                 "Array[Numeric]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.replace('|', ",").as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())?
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("{} value is not an array", value_str))
@@ -168,7 +227,7 @@ impl CSVDataSet {
                 "Boolean" => Value::Bool(value_str.parse()?),
                 "Array[Boolean]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.replace('|', ",").as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())?
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("{} value is not an array", value_str))
@@ -181,7 +240,7 @@ impl CSVDataSet {
                 "Date" => Value::String(value_str),
                 "Array[Date]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.replace('|', ",").as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())?
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("{} value is not an array", value_str))

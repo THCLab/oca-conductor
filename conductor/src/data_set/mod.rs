@@ -1,27 +1,41 @@
 pub mod csv_data_set;
-pub mod json_data_set;
 
-use crate::transformator::{OpType, Operation};
-use oca_rust::state::oca::OCA;
+use crate::errors::GenericError;
+pub use csv_data_set::CSVDataSet;
 use serde_json::Value;
 use std::collections::BTreeMap;
+#[cfg(feature = "transformer")]
+use crate::transformer::data_set_transformer::{OpType, Operation};
+#[cfg(feature = "transformer")]
+use oca_rust::state::oca::OCA;
 
 erased_serde::serialize_trait_object!(DataSet);
 dyn_clone::clone_trait_object!(DataSet);
 
 pub trait DataSet: erased_serde::Serialize + dyn_clone::DynClone {
-    fn new(plain: String) -> Self
+    fn new(raw: String) -> Self
     where
         Self: Sized;
-    fn load(&self, attribute_types: BTreeMap<String, String>) -> Vec<Value>;
-    fn transform_schema(&self, mappings: BTreeMap<String, String>) -> Box<dyn DataSet>;
+    fn load(
+        &self,
+        attribute_types: BTreeMap<String, String>,
+    ) -> Result<Vec<Value>, Vec<GenericError>>;
+    #[cfg(feature = "transformer")]
+    fn transform_schema(
+        &self,
+        mappings: BTreeMap<String, String>,
+    ) -> Result<Box<dyn DataSet>, GenericError>;
+    #[cfg(feature = "transformer")]
     fn transform_data(
         &self,
         oca: &OCA,
         entry_code_mappings: BTreeMap<String, BTreeMap<String, String>>,
         unit_transformation_operations: BTreeMap<String, Vec<Operation>>,
-    ) -> Box<dyn DataSet>;
+    ) -> Result<Box<dyn DataSet>, Vec<GenericError>>;
 
+    fn get_raw(&self) -> String;
+
+    #[cfg(feature = "transformer")]
     fn calculate_value_units(&self, value: f64, operations: &[Operation]) -> f64 {
         let mut result = value;
         for operation in operations {
@@ -31,6 +45,7 @@ pub trait DataSet: erased_serde::Serialize + dyn_clone::DynClone {
         result
     }
 
+    #[cfg(feature = "transformer")]
     fn apply_operation(&self, value: f64, operation: &Operation) -> f64 {
         match operation.op {
             OpType::Multiply => value * operation.value,
