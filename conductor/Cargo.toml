@@ -1,7 +1,9 @@
 [package]
 name = "oca_conductor"
+description = "Lib for validating or tranforming data captured with OCA"
 version = "0.0.1"
 edition = "2021"
+license = "EUPL-1.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

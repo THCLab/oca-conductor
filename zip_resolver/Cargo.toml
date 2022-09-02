@@ -1,7 +1,9 @@
 [package]
 name = "oca_zip_resolver"
+description = "Lib for resolving OCA Bundle from zip file to OCA struct"
 version = "0.1.0"
 edition = "2021"
+license = "EUPL-1.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
