@@ -65,15 +65,20 @@ impl DataSet for CSVDataSet {
                     .iter()
                     .enumerate()
                     .map(|(i, v)| {
-                        let attribute_type = attribute_types
-                            .get(&header_row.get(i).unwrap().to_string())
-                            .unwrap();
-                        match Self::parse_value(v, attribute_type) {
-                            Ok(parsed) => parsed,
-                            Err(e) => {
-                                errors.push(e);
-                                Value::Null
-                            }
+                        let attribute_name = header_row.get(i).unwrap().to_string();
+                        let attribute_type_op = attribute_types.get(&attribute_name);
+                        match attribute_type_op {
+                            Some(attribute_type) => match Self::parse_value(v, attribute_type) {
+                                Ok(parsed) => parsed,
+                                Err(e) => {
+                                    errors.push(GenericError::from(format!(
+                                        "{}: {}",
+                                        attribute_name, e
+                                    )));
+                                    Value::Null
+                                }
+                            },
+                            None => v.clone(),
                         }
                     })
                     .collect();
@@ -194,6 +199,11 @@ impl DataSet for CSVDataSet {
 }
 
 impl CSVDataSet {
+    pub fn delimiter(&mut self, d: char) -> Self {
+        self.delimiter = d;
+        self.clone()
+    }
+
     fn parse_value(value: &Value, attribute_type: &str) -> Result<Value, GenericError> {
         if value.is_string() {
             let value_str = value.as_str().unwrap().to_string();
@@ -201,10 +211,11 @@ impl CSVDataSet {
                 "Text" => Value::String(value_str),
                 "Array[Text]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())
+                        .unwrap_or_else(|_| Value::String(value_str.clone()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("{} value is not an array", value_str))
+                            GenericError::from(format!("\"{}\" value is not an array", value_str))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "Text")?)
@@ -214,10 +225,11 @@ impl CSVDataSet {
                 "Numeric" => Value::Number(value_str.parse()?),
                 "Array[Numeric]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())
+                        .unwrap_or_else(|_| Value::String(value_str.clone()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("{} value is not an array", value_str))
+                            GenericError::from(format!("\"{}\" value is not an array", value_str))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "Numeric")?)
@@ -227,10 +239,11 @@ impl CSVDataSet {
                 "Boolean" => Value::Bool(value_str.parse()?),
                 "Array[Boolean]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())
+                        .unwrap_or_else(|_| Value::String(value_str.clone()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("{} value is not an array", value_str))
+                            GenericError::from(format!("\"{}\" value is not an array", value_str))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "Boolean")?)
@@ -240,10 +253,11 @@ impl CSVDataSet {
                 "Date" => Value::String(value_str),
                 "Array[Date]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())?
+                    for v in serde_json::from_str::<Value>(value_str.as_str())
+                        .unwrap_or_else(|_| Value::String(value_str.clone()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("{} value is not an array", value_str))
+                            GenericError::from(format!("\"{}\" value is not an array", value_str))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "Date")?)
@@ -251,11 +265,70 @@ impl CSVDataSet {
                     Value::Array(parsed)
                 }
                 _ => Value::Null,
+                // TODO add parsing Binary and SAI types
             };
 
             return Ok(parsed_value);
         }
 
         Ok(value.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use oca_rust::state::oca::OCA;
+
+    fn setup_oca() -> OCA {
+        let common_assets_dir_path = format!("{}/../assets", env!("CARGO_MANIFEST_DIR"));
+        let oca_result = oca_zip_resolver::resolve_from_zip(
+            format!("{}/oca_bundle.zip", common_assets_dir_path).as_str(),
+        );
+        assert!(oca_result.is_ok());
+        oca_result.unwrap()
+    }
+
+    #[test]
+    fn load_csv_data_set() {
+        let oca = setup_oca();
+        let result = CSVDataSet::new(
+            r#"asd
+test@example.com"#
+                .to_string(),
+        )
+        .load(oca.capture_base.attributes);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn load_csv_data_set_with_custom_delimiter() {
+        let oca = setup_oca();
+        let result = CSVDataSet::new(
+            r#"first,second
+1,2"#
+                .to_string(),
+        )
+        .delimiter(',')
+        .load(oca.capture_base.attributes);
+
+        assert!(result.is_ok());
+        if let Value::Object(record) = result.unwrap().first().unwrap() {
+            assert_eq!(record.len(), 2);
+        }
+    }
+
+    #[test]
+    fn parse_vaules_with_invalid_array() {
+        let array_types = vec![
+            "Array[Text]",
+            "Array[Numeric]",
+            "Array[Date]",
+            "Array[Boolean]",
+        ];
+        for array_type in array_types {
+            let result = CSVDataSet::parse_value(&Value::String("asd".to_string()), array_type);
+            assert!(result.is_err());
+        }
     }
 }

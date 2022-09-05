@@ -1,13 +1,13 @@
 pub mod csv_data_set;
 
 use crate::errors::GenericError;
-pub use csv_data_set::CSVDataSet;
-use serde_json::Value;
-use std::collections::BTreeMap;
 #[cfg(feature = "transformer")]
 use crate::transformer::data_set_transformer::{OpType, Operation};
+pub use csv_data_set::CSVDataSet;
 #[cfg(feature = "transformer")]
 use oca_rust::state::oca::OCA;
+use serde_json::Value;
+use std::collections::BTreeMap;
 
 erased_serde::serialize_trait_object!(DataSet);
 dyn_clone::clone_trait_object!(DataSet);

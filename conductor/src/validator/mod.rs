@@ -339,4 +339,47 @@ test@example.com;["A"];1;[22, "23"];01.01.1999;["01.01.2000"];true;[false, true]
         let validation_result = validator.validate();
         assert!(validation_result.is_ok());
     }
+
+    #[test]
+    fn validation_of_data_set_with_missing_attribute_should_return_failed_validation_result() {
+        let oca = setup_oca();
+        let mut validator = Validator::new(oca);
+        validator.add_data_set(CSVDataSet::new(
+            r#"email*
+test@example.com"#
+                .to_string(),
+        ));
+        let validation_result = validator.validate();
+        assert!(validation_result.is_err());
+    }
+
+    #[test]
+    fn validation_with_unfulfilled_constraints_should_return_failed_validation_result() {
+        let oca = setup_oca();
+        let mut validator = Validator::new(oca);
+        validator.set_constraints(ConstraintsConfig {
+            fail_on_additional_attributes: true,
+        });
+        validator.add_data_set(CSVDataSet::new(
+            r#"email*;licenses*;additional
+test@example.com;["A"];1"#
+                .to_string(),
+        ));
+        let validation_result = validator.validate();
+
+        assert!(validation_result.is_err());
+    }
+
+    #[test]
+    fn validation_of_invalid_data_set_should_return_failed_validation_result() {
+        let oca = setup_oca();
+        let mut validator = Validator::new(oca);
+        validator.add_data_set(CSVDataSet::new(
+            r#"additional
+1"#
+            .to_string(),
+        ));
+        let validation_result = validator.validate();
+        assert!(validation_result.is_err());
+    }
 }
