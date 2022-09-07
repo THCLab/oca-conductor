@@ -36,10 +36,15 @@ impl ValidatorWrapper {
     ) {
         match data_set.t {
             DataSetType::CSVDataSet => {
-                self.base.add_data_set(CSVDataSet::new(data_set.raw.clone()));
+                let mut internal_data_set = CSVDataSet::new(data_set.raw.clone());
+                if let Some(delimiter) = &data_set.delimiter {
+                    if let Some(sign) = delimiter.chars().collect::<Vec<char>>().first() {
+                        internal_data_set.delimiter(*sign);
+                    }
+                }
+                self.base.add_data_set(internal_data_set);
             }
         }
-        // self.update_state();
     }
 
     #[napi]
@@ -54,12 +59,6 @@ impl ValidatorWrapper {
             Err(errors) => errors.iter().map(|e| e.to_string()).collect()
         }
     }
-
-    /*
-    fn update_state(&mut self) {
-        self.data_sets = self.base.data_sets.clone();
-    }
-    */
 }
 
 #[napi(object, js_name = "ConstraintsConfig")]

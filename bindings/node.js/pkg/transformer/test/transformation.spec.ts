@@ -8,8 +8,8 @@ describe("Transformer", () => {
       const transformer = new Transformer(oca)
       transformer.addDataSet(
         new CSVDataSet(
-`e-mail*;licenses*
-test@example.com;["a"]`
+`e-mail*,licenses*
+test@example.com,["a"]`, ','
         )
       ).transformPre([
         `
@@ -35,7 +35,7 @@ test@example.com;["a"]`
       ])
       const result = transformer.getRawDatasets()
       expect(result.length).to.be.eq(1)
-      expect(result[0]).to.be.eq('email*;licenses*\n"test@example.com";["A"]')
+      expect(result[0]).to.be.eq('email*,licenses*\n"test@example.com",["A"]')
     })
   })
 })

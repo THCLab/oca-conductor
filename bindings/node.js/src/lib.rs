@@ -25,22 +25,23 @@ pub enum DataSetType {
 pub struct DataSetLoaderRouter {
     t: DataSetType,
     raw: String,
+    delimiter: Option<String>
 }
 
 #[napi(js_name = "CSVDataSet")]
-pub struct CSVDataSetWrapper {
-    raw: String,
-}
+pub struct CSVDataSetWrapper;
 
 #[napi]
 impl CSVDataSetWrapper {
     #[napi(constructor)]
     pub fn new(
         data_set: String,
+        delimiter: Option<String>
     ) -> DataSetLoaderRouter {
         DataSetLoaderRouter {
             t: DataSetType::CSVDataSet,
             raw: data_set,
+            delimiter
         }
     }
 }

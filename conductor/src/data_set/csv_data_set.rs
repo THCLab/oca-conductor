@@ -113,7 +113,7 @@ impl DataSet for CSVDataSet {
                     .collect::<Vec<&str>>()
                     .join("\n");
         }
-        Ok(Box::new(Self::new(transformed_raw)))
+        Ok(Box::new(Self::new(transformed_raw).delimiter(self.delimiter)))
     }
 
     #[cfg(feature = "transformer")]
@@ -194,7 +194,7 @@ impl DataSet for CSVDataSet {
             }
         }
 
-        Ok(Box::new(Self::new(data)))
+        Ok(Box::new(Self::new(data).delimiter(self.delimiter)))
     }
 }
 
