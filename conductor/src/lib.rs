@@ -1,5 +1,5 @@
 pub mod data_set;
-mod errors;
+pub mod errors;
 
 #[cfg(feature = "transformer")]
 pub mod transformer;

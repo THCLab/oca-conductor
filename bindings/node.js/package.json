@@ -1,7 +1,7 @@
 {
-  "name": "oca-conductor",
+  "name": "oca-data-validator",
   "version": "0.0.6",
-  "description": "Node bindings to oca-conductor (Rust)",
+  "description": "Node bindings to oca-conductor validator (Rust)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
@@ -28,13 +28,16 @@
     "ttypescript": "^1.5.13",
     "typescript": "^4.3.2"
   },
-  "napi": {
-    "name": "index"
-  },
   "scripts": {
-    "build": "napi build --platform --release --strip",
-    "build:debug": "napi build --platform",
-    "test": "jest -c jest.ts-config.js",
-    "compile": "ttsc -p tsconfig.json"
+    "build:validator": "$npm_execpath run build:validator:debug:pre --release --strip && mv index.validator.*.node pkg/validator",
+    "build:validator:debug": "$npm_execpath run build:validator:debug:pre && mv index.validator.*.node pkg/validator",
+    "build:validator:debug:pre": "napi build --platform -c config/validator/napi.config.json --features validator --js pkg/validator/index.js --dts pkg/validator/index.d.ts",
+    "test:validator": "jest -c config/validator/jest.ts-config.js",
+    "compile:validator": "ttsc -p config/validator/tsconfig.json",
+    "build:transformer": "$npm_execpath run build:transformer:debug:pre --release --strip && mv index.transformer.*.node pkg/transformer",
+    "build:transformer:debug": "$npm_execpath run build:transformer:debug:pre && mv index.transformer.*.node pkg/transformer",
+    "build:transformer:debug:pre": "napi build --platform -c config/transformer/napi.config.json --features transformer --js pkg/transformer/index.js --dts pkg/transformer/index.d.ts",
+    "test:transformer": "jest -c config/transformer/jest.ts-config.js",
+    "compile:transformer": "ttsc -p config/transformer/tsconfig.json"
   }
 }

@@ -3,21 +3,21 @@ module.exports = {
   preset: 'ts-jest',
   globals: {
     'ts-jest': {
-      tsconfig: "tsconfig.test.json"
+      tsconfig: "config/validator/tsconfig.test.json"
     },
   },
   setupFilesAfterEnv: [],
   testEnvironment: 'node',
   roots: [
-    "<rootDir>/src",
-    "<rootDir>/test",
+    "../../pkg/validator/src",
+    "../../pkg/validator/test",
   ],
   moduleDirectories: [
     "node_modules",
     "src",
   ],
   moduleNameMapper: {
-    '^@test(.*)$': "<rootDir>test/$1",
+    '^@test(.*)$': "../../pkg/validator/test/$1",
   },
   clearMocks: true,
 };

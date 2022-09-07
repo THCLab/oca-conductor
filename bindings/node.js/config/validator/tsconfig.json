@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../pkg/validator/build",
+    "baseUrl": "../../pkg/validator"
+  },
+  "include": [
+    "../../pkg/validator/src/**/*",
+    "../../pkg/validator/src/**/*.json"
+  ],
+  "exclude": ["../../node_modules", "../../pkg/validator/**/*.spec.ts"]
+}

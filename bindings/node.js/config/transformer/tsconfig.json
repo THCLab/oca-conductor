@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../pkg/transformer/build",
+    "baseUrl": "../../pkg/transformer"
+  },
+  "include": [
+    "../../pkg/transformer/src/**/*",
+    "../../pkg/transformer/src/**/*.json"
+  ],
+  "exclude": ["../../node_modules", "../../pkg/transformer/**/*.spec.ts"]
+}

@@ -10,7 +10,7 @@ use attribute_validator::AttributeValidator;
 use crate::data_set::DataSet;
 
 pub struct Validator {
-    data_sets: Vec<Box<dyn DataSet>>,
+    pub data_sets: Vec<Box<dyn DataSet>>,
     constraints_config: Option<ConstraintsConfig>,
     attribute_validators: HashMap<String, AttributeValidator>,
     attribute_types: BTreeMap<String, String>,
