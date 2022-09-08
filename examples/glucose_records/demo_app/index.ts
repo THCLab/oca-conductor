@@ -26,7 +26,7 @@ const unit_overlay = `
 }
   `
 transformer
-  .addDataSet(new CSVDataSet(data.trimEnd()))
+  .addDataSet(new CSVDataSet(data.trimEnd(), ","))
   .transformPre([mapping_ov, unit_overlay])
 
 const result = transformer.getRawDatasets()
