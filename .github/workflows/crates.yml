@@ -1,0 +1,32 @@
+name: Crates.io
+
+on:
+  push:
+    tags:
+      - "v*"
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all-features --verbose
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --verbose
+      # - uses: katyo/publish-crates@v1
+      #   with:
+      #       registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}

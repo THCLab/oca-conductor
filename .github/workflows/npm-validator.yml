@@ -1,0 +1,42 @@
+name: npmjs.com - Validator
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --features validator
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Setup yarn
+        run: npm install -g yarn
+      - working-directory: ./bindings/node.js
+        run: yarn install
+      - name: Build pkg
+        working-directory: ./bindings/node.js
+        run: yarn build:validator && yarn compile:validator
+      - working-directory: ./bindings/node.js
+        run: yarn test:validator
+
+      # - working-directory: ./bindings/node.js/pkg/validator
+      #   run: yarn publish
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
