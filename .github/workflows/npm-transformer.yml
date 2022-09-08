@@ -36,7 +36,7 @@ jobs:
       - working-directory: ./bindings/node.js
         run: yarn test:transformer
 
-      # - working-directory: ./bindings/node.js/pkg/transformer
-      #   run: yarn publish
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - working-directory: ./bindings/node.js/pkg/transformer
+        run: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
