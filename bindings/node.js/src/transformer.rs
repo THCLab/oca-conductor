@@ -52,6 +52,18 @@ impl TransformerWrapper {
     }
 
     #[napi]
+    pub fn transform(&mut self, overlays: Vec<&str>) -> Result<&Self> {
+        match self.base.transform(overlays) {
+            Ok(_) => Ok(self),
+            Err(errors) => Err(
+                napi::Error::from_reason(
+                    errors.iter().map(|e| e.to_string()).collect::<Vec<String>>().join(",")
+                )
+            )
+        }
+    }
+
+    #[napi]
     pub fn get_raw_datasets(&self) -> Vec<String> {
         self.base.get_raw_datasets()
     }

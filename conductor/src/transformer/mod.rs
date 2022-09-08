@@ -40,13 +40,13 @@ impl Transformer {
                     } else {
                         errors.push(GenericError::from(format!(
                             "Overlay at position {}: Incompatible with OCA Capture Base.",
-                            i + 1
+                            i
                         )))
                     }
                 }
                 Err(_) => errors.push(GenericError::from(format!(
                     "Overlay at position {}: Parsing failed. Invalid format.",
-                    i + 1
+                    i
                 ))),
             }
         }
@@ -73,6 +73,62 @@ impl Transformer {
         if !errors.is_empty() {
             return Err(errors);
         }
+
+        Ok(self)
+    }
+
+    pub fn transform(&mut self, overlays: Vec<&str>) -> Result<&mut Self, Vec<GenericError>> {
+        let mut errors = vec![];
+        let mut target_overlays: Vec<DynOverlay> = vec![];
+
+        let cb_json = serde_json::to_string(&self.oca.capture_base).unwrap();
+        let oca_cb_sai = format!("{}", SelfAddressing::Blake3_256.derive(cb_json.as_bytes()));
+        for (i, overlay_str) in overlays.iter().enumerate() {
+            match serde_json::from_str::<DynOverlay>(overlay_str) {
+                Ok(mut overlay) => {
+                    if oca_cb_sai.eq(overlay.capture_base()) {
+                        target_overlays.push(overlay);
+                    } else {
+                        errors.push(GenericError::from(format!(
+                            "Overlay at position {}: Incompatible with OCA Capture Base.",
+                            i
+                        )))
+                    }
+                }
+                Err(_) => errors.push(GenericError::from(format!(
+                    "Overlay at position {}: Parsing failed. Invalid format.",
+                    i
+                ))),
+            }
+        }
+
+        if self.data_sets.is_empty() {
+            errors.push(GenericError::from("Dataset is empty"));
+        }
+
+        if !errors.is_empty() {
+            return Err(errors);
+        }
+
+        let mut transformed_data_sets = vec![];
+        for (i, data_set) in self.data_sets.iter().enumerate() {
+            let result =
+                data_set_transformer::transform_post(&self.oca, &target_overlays, data_set.clone());
+
+            match result {
+                Ok(data_set) => transformed_data_sets.push(data_set),
+                Err(errs) => errors.extend(
+                    errs.iter()
+                        .map(|e| GenericError::from(format!("DataSet {}: {}", i, e.clone()))),
+                ),
+            }
+        }
+
+        if !errors.is_empty() {
+            return Err(errors);
+        }
+
+        self.data_sets = transformed_data_sets;
 
         Ok(self)
     }
@@ -143,6 +199,64 @@ test2@example.com"#
     }
 
     #[test]
+    fn transform_with_attribute_mapping_overlay() {
+        let oca = setup_oca();
+        let mut transformer = Transformer::new(oca);
+        transformer
+            .add_data_set(CSVDataSet::new(
+                r#"e-mail*
+test@example.com"#
+                    .to_string(),
+            ))
+            .transform_pre(vec![
+                r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/mapping/1.0",
+    "attr_mapping": {
+        "email*":"e-mail*"
+    }
+}
+              "#,
+            ])
+            .unwrap()
+            .add_data_set(CSVDataSet::new(
+                r#"e-mail
+test2@example.com"#
+                    .to_string(),
+            ))
+            .transform_pre(vec![
+                r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/mapping/1.0",
+    "attr_mapping": {
+        "email*":"e-mail"
+    }
+}
+              "#,
+            ])
+            .unwrap()
+            .transform(vec![
+                r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/mapping/1.0",
+    "attr_mapping": {
+        "email*":"email:"
+    }
+}
+              "#,
+            ])
+            .unwrap();
+
+        assert_eq!(
+            transformer.get_raw_datasets(),
+            vec!["email:\ntest@example.com", "email:\ntest2@example.com"]
+        )
+    }
+
+    #[test]
     fn transform_data_with_entry_code_mapping_overlay() {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
@@ -170,6 +284,33 @@ test2@example.com"#
     }
 
     #[test]
+    fn transform_with_entry_code_mapping_overlay() {
+        let oca = setup_oca();
+        let mut transformer = Transformer::new(oca);
+        transformer
+            .add_data_set(CSVDataSet::new(
+                r#"licenses*
+["A"]"#
+                    .to_string(),
+            ))
+            .transform(vec![
+                r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/entry_code_mapping/1.0",
+    "attr_entry_codes_mapping": {
+        "licenses*": [
+            "A:1","B:2","C:3","D:4","E:5"
+        ]
+    }
+}
+              "#,
+            ]);
+
+        assert_eq!(transformer.get_raw_datasets(), vec!["licenses*\n[\"1\"]",])
+    }
+
+    #[test]
     fn transform_data_with_unit_overlay() {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
@@ -191,6 +332,30 @@ test2@example.com"#
             ]);
 
         assert_eq!(transformer.get_raw_datasets(), vec!["number\n100.0",])
+    }
+
+    #[test]
+    fn transform_with_unit_overlay() {
+        let oca = setup_oca();
+        let mut transformer = Transformer::new(oca);
+        transformer
+            .add_data_set(CSVDataSet::new(
+                r#"number
+100"#
+                    .to_string(),
+            ))
+            .transform(vec![
+                r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/unit/1.0",
+    "metric_system":"SI",
+    "attr_units":{"number":"m"}
+}
+              "#,
+            ]);
+
+        assert_eq!(transformer.get_raw_datasets(), vec!["number\n1.0",])
     }
 
     #[test]
