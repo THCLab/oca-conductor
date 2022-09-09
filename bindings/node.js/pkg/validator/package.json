@@ -1,6 +1,6 @@
 {
   "name": "oca-data-validator",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Node bindings to oca-conductor validator (Rust)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -12,8 +12,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/THCLab/oca-conductor/bindings/node.js"
+    "url": "https://github.com/THCLab/oca-conductor/tree/main/bindings/node.js"
   },
-  "homepage": "https://github.com/THCLab/oca-conductor/bindings/node.js",
+  "homepage": "https://github.com/THCLab/oca-conductor/tree/main/bindings/node.js",
   "license": "EUPL-1.2"
 }
