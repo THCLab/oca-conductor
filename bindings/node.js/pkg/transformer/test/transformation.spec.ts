@@ -2,7 +2,7 @@ import { expect } from "chai"
 import { resolveFromZip, Transformer, CSVDataSet } from ".."
 
 describe("Transformer", () => {
-  describe("#transform_pre()", () => {
+  describe("#addDataSet()", () => {
     it("should return successful transformation result when transformation is valid", () => {
       const oca = resolveFromZip(`${__dirname}/../../../../../assets/oca_bundle.zip`)
       const transformer = new Transformer(oca)
@@ -10,8 +10,7 @@ describe("Transformer", () => {
         new CSVDataSet(
 `e-mail*,licenses*
 test@example.com,["a"]`, ','
-        )
-      ).transformPre([
+        ), [
         `
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",

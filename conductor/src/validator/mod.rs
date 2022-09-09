@@ -35,11 +35,8 @@ impl Validator {
         self.constraints_config = Some(config);
     }
 
-    pub fn add_data_set<T: 'static>(&mut self, data_set: T) -> &mut Self
-    where
-        T: DataSet,
-    {
-        self.data_sets.push(Box::new(data_set));
+    pub fn add_data_set(&mut self, data_set: Box<dyn DataSet>) -> &mut Self {
+        self.data_sets.push(data_set);
         self
     }
 

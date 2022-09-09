@@ -13,7 +13,7 @@ erased_serde::serialize_trait_object!(DataSet);
 dyn_clone::clone_trait_object!(DataSet);
 
 pub trait DataSet: erased_serde::Serialize + dyn_clone::DynClone {
-    fn new(raw: String) -> Self
+    fn new(raw: String) -> Box<Self>
     where
         Self: Sized;
     fn load(

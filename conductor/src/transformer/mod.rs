@@ -18,62 +18,54 @@ impl Transformer {
         }
     }
 
-    pub fn add_data_set<T: 'static>(&mut self, data_set: T) -> &mut Self
-    where
-        T: DataSet,
-    {
-        self.data_sets.push(Box::new(data_set));
-        self
-    }
-
-    pub fn transform_pre(&mut self, overlays: Vec<&str>) -> Result<&mut Self, Vec<GenericError>> {
+    pub fn add_data_set(
+        &mut self,
+        data_set: Box<dyn DataSet>,
+        overlays: Option<Vec<&str>>,
+    ) -> Result<&mut Self, Vec<GenericError>> {
         let mut errors = vec![];
-        let mut additional_overlays: Vec<DynOverlay> = vec![];
+        let mut transformed_data_set = data_set.clone();
 
-        let cb_json = serde_json::to_string(&self.oca.capture_base).unwrap();
-        let oca_cb_sai = format!("{}", SelfAddressing::Blake3_256.derive(cb_json.as_bytes()));
-        for (i, overlay_str) in overlays.iter().enumerate() {
-            match serde_json::from_str::<DynOverlay>(overlay_str) {
-                Ok(mut overlay) => {
-                    if oca_cb_sai.eq(overlay.capture_base()) {
-                        additional_overlays.push(overlay);
-                    } else {
-                        errors.push(GenericError::from(format!(
-                            "Overlay at position {}: Incompatible with OCA Capture Base.",
-                            i
-                        )))
+        if let Some(overlays) = overlays {
+            let mut additional_overlays: Vec<DynOverlay> = vec![];
+
+            let cb_json = serde_json::to_string(&self.oca.capture_base).unwrap();
+            let oca_cb_sai = format!("{}", SelfAddressing::Blake3_256.derive(cb_json.as_bytes()));
+            for (i, overlay_str) in overlays.iter().enumerate() {
+                match serde_json::from_str::<DynOverlay>(overlay_str) {
+                    Ok(mut overlay) => {
+                        if oca_cb_sai.eq(overlay.capture_base()) {
+                            additional_overlays.push(overlay);
+                        } else {
+                            errors.push(GenericError::from(format!(
+                                "Overlay at position {}: Incompatible with OCA Capture Base.",
+                                i
+                            )))
+                        }
                     }
+                    Err(_) => errors.push(GenericError::from(format!(
+                        "Overlay at position {}: Parsing failed. Invalid format.",
+                        i
+                    ))),
                 }
-                Err(_) => errors.push(GenericError::from(format!(
-                    "Overlay at position {}: Parsing failed. Invalid format.",
-                    i
-                ))),
+            }
+
+            if errors.is_empty() {
+                let result =
+                    data_set_transformer::transform_pre(&self.oca, additional_overlays, data_set);
+
+                match result {
+                    Ok(data_set) => transformed_data_set = data_set,
+                    Err(errs) => errors.extend(errs.iter().map(|e| GenericError::from(e.clone()))),
+                }
             }
         }
 
-        let last_data_set_result = self.data_sets.pop().ok_or_else(|| {
-            errors.push(GenericError::from("Dataset is empty"));
-        });
-
         if !errors.is_empty() {
             return Err(errors);
         }
 
-        let result = data_set_transformer::transform_data(
-            &self.oca,
-            additional_overlays,
-            last_data_set_result.unwrap(),
-        );
-
-        match result {
-            Ok(data_set) => self.data_sets.push(data_set),
-            Err(errs) => errors.extend(errs.iter().map(|e| GenericError::from(e.clone()))),
-        }
-
-        if !errors.is_empty() {
-            return Err(errors);
-        }
-
+        self.data_sets.push(transformed_data_set);
         Ok(self)
     }
 
@@ -157,13 +149,14 @@ mod tests {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
         transformer
-            .add_data_set(CSVDataSet::new(
-                r#"e-mail*
+            .add_data_set(
+                CSVDataSet::new(
+                    r#"e-mail*
 test@example.com"#
-                    .to_string(),
-            ))
-            .transform_pre(vec![
-                r#"
+                        .to_string(),
+                ),
+                Some(vec![
+                    r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/mapping/1.0",
@@ -172,15 +165,17 @@ test@example.com"#
     }
 }
               "#,
-            ])
+                ]),
+            )
             .unwrap()
-            .add_data_set(CSVDataSet::new(
-                r#"e-mail
+            .add_data_set(
+                CSVDataSet::new(
+                    r#"e-mail
 test2@example.com"#
-                    .to_string(),
-            ))
-            .transform_pre(vec![
-                r#"
+                        .to_string(),
+                ),
+                Some(vec![
+                    r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/mapping/1.0",
@@ -189,7 +184,8 @@ test2@example.com"#
     }
 }
               "#,
-            ])
+                ]),
+            )
             .unwrap();
 
         assert_eq!(
@@ -203,13 +199,14 @@ test2@example.com"#
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
         transformer
-            .add_data_set(CSVDataSet::new(
-                r#"e-mail*
+            .add_data_set(
+                CSVDataSet::new(
+                    r#"e-mail*
 test@example.com"#
-                    .to_string(),
-            ))
-            .transform_pre(vec![
-                r#"
+                        .to_string(),
+                ),
+                Some(vec![
+                    r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/mapping/1.0",
@@ -218,15 +215,17 @@ test@example.com"#
     }
 }
               "#,
-            ])
+                ]),
+            )
             .unwrap()
-            .add_data_set(CSVDataSet::new(
-                r#"e-mail
+            .add_data_set(
+                CSVDataSet::new(
+                    r#"e-mail
 test2@example.com"#
-                    .to_string(),
-            ))
-            .transform_pre(vec![
-                r#"
+                        .to_string(),
+                ),
+                Some(vec![
+                    r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
     "type":"spec/overlays/mapping/1.0",
@@ -235,7 +234,8 @@ test2@example.com"#
     }
 }
               "#,
-            ])
+                ]),
+            )
             .unwrap()
             .transform(vec![
                 r#"
@@ -260,13 +260,13 @@ test2@example.com"#
     fn transform_data_with_entry_code_mapping_overlay() {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
-        transformer
-            .add_data_set(CSVDataSet::new(
+        transformer.add_data_set(
+            CSVDataSet::new(
                 r#"licenses*
 ["a"]"#
                     .to_string(),
-            ))
-            .transform_pre(vec![
+            ),
+            Some(vec![
                 r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
@@ -278,7 +278,8 @@ test2@example.com"#
     }
 }
               "#,
-            ]);
+            ]),
+        );
 
         assert_eq!(transformer.get_raw_datasets(), vec!["licenses*\n[\"A\"]",])
     }
@@ -288,11 +289,15 @@ test2@example.com"#
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
         transformer
-            .add_data_set(CSVDataSet::new(
-                r#"licenses*
+            .add_data_set(
+                CSVDataSet::new(
+                    r#"licenses*
 ["A"]"#
-                    .to_string(),
-            ))
+                        .to_string(),
+                ),
+                None,
+            )
+            .unwrap()
             .transform(vec![
                 r#"
 {
@@ -314,13 +319,13 @@ test2@example.com"#
     fn transform_data_with_unit_overlay() {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
-        transformer
-            .add_data_set(CSVDataSet::new(
+        transformer.add_data_set(
+            CSVDataSet::new(
                 r#"number
 3.2808"#
                     .to_string(),
-            ))
-            .transform_pre(vec![
+            ),
+            Some(vec![
                 r#"
 {
     "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
@@ -329,7 +334,8 @@ test2@example.com"#
     "attr_units":{"number":"ft"}
 }
               "#,
-            ]);
+            ]),
+        );
 
         assert_eq!(transformer.get_raw_datasets(), vec!["number\n100.0",])
     }
@@ -339,11 +345,15 @@ test2@example.com"#
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
         transformer
-            .add_data_set(CSVDataSet::new(
-                r#"number
+            .add_data_set(
+                CSVDataSet::new(
+                    r#"number
 100"#
-                    .to_string(),
-            ))
+                        .to_string(),
+                ),
+                None,
+            )
+            .unwrap()
             .transform(vec![
                 r#"
 {
@@ -362,13 +372,14 @@ test2@example.com"#
     fn transform_data_with_invalid_overlay() {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
-        let result = transformer
-            .add_data_set(CSVDataSet::new(
+        let result = transformer.add_data_set(
+            CSVDataSet::new(
                 r#"e-mail*
 test@example.com"#
                     .to_string(),
-            ))
-            .transform_pre(vec![r#"invalid"#]);
+            ),
+            Some(vec![r#"invalid"#]),
+        );
 
         assert!(result.is_err())
     }

@@ -27,11 +27,11 @@ impl Serialize for CSVDataSet {
 }
 
 impl DataSet for CSVDataSet {
-    fn new(raw: String) -> Self {
-        Self {
+    fn new(raw: String) -> Box<Self> {
+        Box::new(Self {
             raw,
             delimiter: ';',
-        }
+        })
     }
 
     fn get_raw(&self) -> String {

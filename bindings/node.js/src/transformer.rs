@@ -24,7 +24,8 @@ impl TransformerWrapper {
     pub fn add_data_set(
         &mut self,
         #[napi(ts_arg_type = "CSVDataSet")] data_set: &DataSetLoaderRouter,
-    ) -> &Self {
+        overlays: Option<Vec<&str>>
+    ) -> Result<&Self> {
         match data_set.t {
             DataSetType::CSVDataSet => {
                 let mut internal_data_set = CSVDataSet::new(data_set.raw.clone());
@@ -33,21 +34,15 @@ impl TransformerWrapper {
                         internal_data_set.delimiter(*sign);
                     }
                 }
-                self.base.add_data_set(internal_data_set);
+                match self.base.add_data_set(internal_data_set, overlays) {
+                    Ok(_) => Ok(self),
+                    Err(errors) => Err(
+                        napi::Error::from_reason(
+                            errors.iter().map(|e| e.to_string()).collect::<Vec<String>>().join(",")
+                        )
+                    )
+                }
             }
-        }
-        self
-    }
-
-    #[napi]
-    pub fn transform_pre(&mut self, overlays: Vec<&str>) -> Result<&Self> {
-        match self.base.transform_pre(overlays) {
-            Ok(_) => Ok(self),
-            Err(errors) => Err(
-                napi::Error::from_reason(
-                    errors.iter().map(|e| e.to_string()).collect::<Vec<String>>().join(",")
-                )
-            )
         }
     }
 
