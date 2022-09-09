@@ -9,7 +9,7 @@ license = "EUPL-1.2"
 
 [features]
 validator = []
-transformer = ["reqwest"]
+transformer = ["reqwest", "validator"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

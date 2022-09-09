@@ -36,6 +36,30 @@ test@example.com,["a"]`, ','
       expect(result.length).to.be.eq(1)
       expect(result[0]).to.be.eq('email*,licenses*\n"test@example.com",["A"]')
     })
+
+    it("should throw errors when data_set is invalid", () => {
+      const oca = resolveFromZip(`${__dirname}/../../../../../assets/oca_bundle.zip`)
+      const transformer = new Transformer(oca)
+
+      expect(
+        () =>
+          transformer.addDataSet(
+            new CSVDataSet(
+    `e-mail*
+    test@example.com`, ','
+            ), [
+            `
+    {
+        "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+        "type":"spec/overlays/mapping/1.0",
+        "attr_mapping": {
+            "email*":"e-mail*"
+        }
+    }
+            `
+          ])
+      ).to.throw()
+    })
   })
 
   describe("#transform()", () => {

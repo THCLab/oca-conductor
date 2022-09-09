@@ -2,18 +2,31 @@ pub mod data_set_transformer;
 
 use crate::data_set::DataSet;
 use crate::errors::GenericError;
+use crate::{validator::ConstraintsConfig, Validator};
+use oca_rust::controller::load_oca;
 use oca_rust::state::oca::{DynOverlay, OCA};
 use said::derivation::SelfAddressing;
 
 pub struct Transformer {
     oca: OCA,
+    validator: Validator,
     data_sets: Vec<Box<dyn DataSet>>,
 }
 
 impl Transformer {
     pub fn new(oca: OCA) -> Self {
+        let mut validator = Validator::new(
+            load_oca(&mut serde_json::to_string(&oca).unwrap().as_bytes())
+                .unwrap()
+                .finalize(),
+        );
+        validator.set_constraints(ConstraintsConfig {
+            fail_on_additional_attributes: true,
+        });
+
         Self {
             oca,
+            validator,
             data_sets: vec![],
         }
     }
@@ -65,8 +78,15 @@ impl Transformer {
             return Err(errors);
         }
 
-        self.data_sets.push(transformed_data_set);
-        Ok(self)
+        self.validator.data_sets = vec![];
+        self.validator.add_data_set(transformed_data_set.clone());
+        match self.validator.validate() {
+            Ok(_) => {
+                self.data_sets.push(transformed_data_set);
+                Ok(self)
+            }
+            Err(errors) => Err(errors),
+        }
     }
 
     pub fn transform(&mut self, overlays: Vec<&str>) -> Result<&mut Self, Vec<GenericError>> {
@@ -151,8 +171,8 @@ mod tests {
         transformer
             .add_data_set(
                 CSVDataSet::new(
-                    r#"e-mail*
-test@example.com"#
+                    r#"e-mail*;licenses*
+test@example.com;["A"]"#
                         .to_string(),
                 ),
                 Some(vec![
@@ -170,8 +190,8 @@ test@example.com"#
             .unwrap()
             .add_data_set(
                 CSVDataSet::new(
-                    r#"e-mail
-test2@example.com"#
+                    r#"e-mail;licenses*
+test2@example.com;["B"]"#
                         .to_string(),
                 ),
                 Some(vec![
@@ -190,7 +210,10 @@ test2@example.com"#
 
         assert_eq!(
             transformer.get_raw_datasets(),
-            vec!["email*\ntest@example.com", "email*\ntest2@example.com"]
+            vec![
+                "email*;licenses*\ntest@example.com;[\"A\"]",
+                "email*;licenses*\ntest2@example.com;[\"B\"]"
+            ]
         )
     }
 
@@ -201,8 +224,8 @@ test2@example.com"#
         transformer
             .add_data_set(
                 CSVDataSet::new(
-                    r#"e-mail*
-test@example.com"#
+                    r#"e-mail*;licenses*
+test@example.com;["A"]"#
                         .to_string(),
                 ),
                 Some(vec![
@@ -220,8 +243,8 @@ test@example.com"#
             .unwrap()
             .add_data_set(
                 CSVDataSet::new(
-                    r#"e-mail
-test2@example.com"#
+                    r#"e-mail;licenses*
+test2@example.com;["B"]"#
                         .to_string(),
                 ),
                 Some(vec![
@@ -252,7 +275,10 @@ test2@example.com"#
 
         assert_eq!(
             transformer.get_raw_datasets(),
-            vec!["email:\ntest@example.com", "email:\ntest2@example.com"]
+            vec![
+                "email:;licenses*\ntest@example.com;[\"A\"]",
+                "email:;licenses*\ntest2@example.com;[\"B\"]"
+            ]
         )
     }
 
@@ -262,8 +288,8 @@ test2@example.com"#
         let mut transformer = Transformer::new(oca);
         transformer.add_data_set(
             CSVDataSet::new(
-                r#"licenses*
-["a"]"#
+                r#"email*;licenses*
+a@a.com;["a"]"#
                     .to_string(),
             ),
             Some(vec![
@@ -281,7 +307,10 @@ test2@example.com"#
             ]),
         );
 
-        assert_eq!(transformer.get_raw_datasets(), vec!["licenses*\n[\"A\"]",])
+        assert_eq!(
+            transformer.get_raw_datasets(),
+            vec!["email*;licenses*\n\"a@a.com\";[\"A\"]",]
+        )
     }
 
     #[test]
@@ -291,8 +320,8 @@ test2@example.com"#
         transformer
             .add_data_set(
                 CSVDataSet::new(
-                    r#"licenses*
-["A"]"#
+                    r#"email*;licenses*
+a@a.com;["A"]"#
                         .to_string(),
                 ),
                 None,
@@ -312,7 +341,10 @@ test2@example.com"#
               "#,
             ]);
 
-        assert_eq!(transformer.get_raw_datasets(), vec!["licenses*\n[\"1\"]",])
+        assert_eq!(
+            transformer.get_raw_datasets(),
+            vec!["email*;licenses*\n\"a@a.com\";[\"1\"]",]
+        )
     }
 
     #[test]
@@ -321,8 +353,8 @@ test2@example.com"#
         let mut transformer = Transformer::new(oca);
         transformer.add_data_set(
             CSVDataSet::new(
-                r#"number
-3.2808"#
+                r#"email*;licenses*;number
+a@a.com;["A"];3.2808"#
                     .to_string(),
             ),
             Some(vec![
@@ -337,7 +369,10 @@ test2@example.com"#
             ]),
         );
 
-        assert_eq!(transformer.get_raw_datasets(), vec!["number\n100.0",])
+        assert_eq!(
+            transformer.get_raw_datasets(),
+            vec!["email*;licenses*;number\n\"a@a.com\";[\"A\"];100.0",]
+        )
     }
 
     #[test]
@@ -347,8 +382,8 @@ test2@example.com"#
         transformer
             .add_data_set(
                 CSVDataSet::new(
-                    r#"number
-100"#
+                    r#"email*;licenses*;number
+a@a.com;["A"];100"#
                         .to_string(),
                 ),
                 None,
@@ -365,7 +400,10 @@ test2@example.com"#
               "#,
             ]);
 
-        assert_eq!(transformer.get_raw_datasets(), vec!["number\n1.0",])
+        assert_eq!(
+            transformer.get_raw_datasets(),
+            vec!["email*;licenses*;number\n\"a@a.com\";[\"A\"];1.0",]
+        )
     }
 
     #[test]
@@ -374,8 +412,8 @@ test2@example.com"#
         let mut transformer = Transformer::new(oca);
         let result = transformer.add_data_set(
             CSVDataSet::new(
-                r#"e-mail*
-test@example.com"#
+                r#"e-mail*;licenses*
+test@example.com;["A"]"#
                     .to_string(),
             ),
             Some(vec![r#"invalid"#]),
