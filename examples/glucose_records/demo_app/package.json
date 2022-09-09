@@ -9,7 +9,7 @@
   "author": "",
   "license": "EUPL-1.2",
   "dependencies": {
-    "oca-data-transformer": "^0.0.2"
+    "oca-data-transformer": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^18.7.16"

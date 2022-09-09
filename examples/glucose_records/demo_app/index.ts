@@ -6,7 +6,7 @@ const oca = resolveFromZip("../oca_bundle.zip")
 
 const transformer = new Transformer(oca)
 
-const mapping_ov = `
+const mapping_overlay = `
 {
         "capture_base":"Ev_RaB-gIOn8VAB3sg40mINxjiYRxdLVQrgce0aZbFcc",
         "type":"spec/overlays/mapping/1.0",
@@ -25,9 +25,10 @@ const unit_overlay = `
   "attr_units":{"blood_glucose":"mg/dL"}
 }
   `
-transformer
-  .addDataSet(new CSVDataSet(data.trimEnd(), ","))
-  .transformPre([mapping_ov, unit_overlay])
+transformer.addDataSet(
+  new CSVDataSet(data.trimEnd(), ","),
+  [mapping_overlay, unit_overlay]
+)
 
 const result = transformer.getRawDatasets()
 console.log(result)
