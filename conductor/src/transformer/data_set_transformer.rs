@@ -10,9 +10,10 @@ pub fn transform_pre(
 ) -> Result<Box<dyn DataSet>, Vec<String>> {
     let mut attribute_mappings: BTreeMap<String, String> = BTreeMap::new();
     let mut entry_code_mappings: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
-    let mut source_units: BTreeMap<String, String> = BTreeMap::new();
     let mut target_units: BTreeMap<String, String> = BTreeMap::new();
     let mut unit_transformation_operations: BTreeMap<String, Vec<Operation>> = BTreeMap::new();
+
+    let mut transformed_data_set = data_set.clone();
 
     for overlay in &oca.overlays {
         if let Some(mappings) = get_attribute_mappings(overlay) {
@@ -25,35 +26,6 @@ pub fn transform_pre(
             target_units.extend(units);
         }
     }
-    for overlay in additional_overlays {
-        if let Some(mappings) = get_attribute_mappings(&overlay) {
-            attribute_mappings.extend(mappings);
-        }
-        if let Some(mappings) = get_entry_code_mappings(&overlay) {
-            entry_code_mappings.extend(mappings);
-        }
-        if let Some(units) = get_units(&overlay) {
-            source_units.extend(units);
-        }
-    }
-
-    for (k, source_unit) in &source_units {
-        if let Some(target_unit) = target_units.get(k) {
-            match get_operations(source_unit.clone(), target_unit.clone()) {
-                Ok(operations) => {
-                    unit_transformation_operations.insert(k.clone(), operations);
-                }
-                Err(errors) => return Err(errors),
-            }
-        }
-    }
-
-    let mut transformed_data_set = data_set.clone();
-    if !attribute_mappings.is_empty() {
-        transformed_data_set = transformed_data_set
-            .transform_schema(attribute_mappings.clone())
-            .unwrap();
-    }
 
     if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
         transformed_data_set = transformed_data_set
@@ -63,6 +35,56 @@ pub fn transform_pre(
                 unit_transformation_operations.clone(),
             )
             .unwrap()
+    }
+
+    if !attribute_mappings.is_empty() {
+        transformed_data_set = transformed_data_set
+            .transform_schema(attribute_mappings.clone())
+            .unwrap();
+    }
+
+    for overlay in additional_overlays {
+        attribute_mappings = BTreeMap::new();
+        entry_code_mappings = BTreeMap::new();
+        let mut source_units: BTreeMap<String, String> = BTreeMap::new();
+        if let Some(mappings) = get_attribute_mappings(&overlay) {
+            attribute_mappings.extend(mappings);
+        }
+        if let Some(mappings) = get_entry_code_mappings(&overlay) {
+            entry_code_mappings.extend(mappings);
+        }
+        if let Some(units) = get_units(&overlay) {
+            source_units.extend(units);
+        }
+
+        for (k, source_unit) in &source_units {
+            if let Some(target_unit) = target_units.get(k) {
+                if unit_transformation_operations.get(k).is_none() {
+                    match get_operations(source_unit.clone(), target_unit.clone()) {
+                        Ok(operations) => {
+                            unit_transformation_operations.insert(k.clone(), operations);
+                        }
+                        Err(errors) => return Err(errors),
+                    }
+                }
+            }
+        }
+
+        if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
+            transformed_data_set = transformed_data_set
+                .transform_data(
+                    oca,
+                    entry_code_mappings.clone(),
+                    unit_transformation_operations.clone(),
+                )
+                .unwrap()
+        }
+
+        if !attribute_mappings.is_empty() {
+            transformed_data_set = transformed_data_set
+                .transform_schema(attribute_mappings.clone())
+                .unwrap();
+        }
     }
     Ok(transformed_data_set)
 }
@@ -77,6 +99,8 @@ pub fn transform_post(
     let mut source_units: BTreeMap<String, String> = BTreeMap::new();
     let mut target_units: BTreeMap<String, String> = BTreeMap::new();
     let mut unit_transformation_operations: BTreeMap<String, Vec<Operation>> = BTreeMap::new();
+
+    let mut transformed_data_set = data_set.clone();
 
     for overlay in &oca.overlays {
         if let Some(mappings) = get_attribute_mappings(overlay) {
@@ -107,33 +131,35 @@ pub fn transform_post(
         if let Some(units) = get_units(&overlay) {
             target_units.extend(units);
         }
-    }
-    for (k, target_unit) in &target_units {
-        if let Some(source_unit) = source_units.get(k) {
-            match get_operations(source_unit.clone(), target_unit.clone()) {
-                Ok(operations) => {
-                    unit_transformation_operations.insert(k.clone(), operations);
+
+        for (k, target_unit) in &target_units {
+            if let Some(source_unit) = source_units.get(k) {
+                if unit_transformation_operations.get(k).is_none() {
+                    match get_operations(source_unit.clone(), target_unit.clone()) {
+                        Ok(operations) => {
+                            unit_transformation_operations.insert(k.clone(), operations);
+                        }
+                        Err(errors) => return Err(errors),
+                    }
                 }
-                Err(errors) => return Err(errors),
             }
         }
-    }
 
-    let mut transformed_data_set = data_set.clone();
-    if !attribute_mappings.is_empty() {
-        transformed_data_set = transformed_data_set
-            .transform_schema(attribute_mappings.clone())
-            .unwrap();
-    }
+        if !attribute_mappings.is_empty() {
+            transformed_data_set = transformed_data_set
+                .transform_schema(attribute_mappings.clone())
+                .unwrap();
+        }
 
-    if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
-        transformed_data_set = transformed_data_set
-            .transform_data(
-                oca,
-                entry_code_mappings.clone(),
-                unit_transformation_operations.clone(),
-            )
-            .unwrap()
+        if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
+            transformed_data_set = transformed_data_set
+                .transform_data(
+                    oca,
+                    entry_code_mappings.clone(),
+                    unit_transformation_operations.clone(),
+                )
+                .unwrap()
+        }
     }
     Ok(transformed_data_set)
 }
