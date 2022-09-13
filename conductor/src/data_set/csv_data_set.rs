@@ -152,7 +152,7 @@ impl DataSet for CSVDataSet {
                         Value::String(_) => {
                             if let Some(mapped_entry) = mapped_entries.get(value.as_str().unwrap())
                             {
-                                value = Value::String(mapped_entry.to_string());
+                                value = Value::String(mapped_entry.clone());
                             };
                         }
                         _ => (),
@@ -189,7 +189,13 @@ impl DataSet for CSVDataSet {
                 let line = String::from("\n")
                     + &record
                         .values()
-                        .map(|v| v.to_string())
+                        .map(|v| {
+                            if v.is_string() {
+                                v.as_str().unwrap().to_string()
+                            } else {
+                                v.to_string()
+                            }
+                        })
                         .collect::<Vec<String>>()
                         .join(&self.delimiter.to_string());
                 data.push_str(&line);
@@ -208,13 +214,13 @@ impl CSVDataSet {
 
     fn parse_value(value: &Value, attribute_type: &str) -> Result<Value, GenericError> {
         if value.is_string() {
-            let value_str = value.as_str().unwrap().to_string();
+            let value_str = value.as_str().unwrap();
             let parsed_value = match attribute_type {
-                "Text" => Value::String(value_str),
+                "Text" => value.clone(),
                 "Array[Text]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())
-                        .unwrap_or_else(|_| Value::String(value_str.clone()))
+                    for v in serde_json::from_str::<Value>(value_str)
+                        .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("\"{}\" value is not an array", value_str))
@@ -227,8 +233,8 @@ impl CSVDataSet {
                 "Numeric" => Value::Number(value_str.parse()?),
                 "Array[Numeric]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())
-                        .unwrap_or_else(|_| Value::String(value_str.clone()))
+                    for v in serde_json::from_str::<Value>(value_str)
+                        .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("\"{}\" value is not an array", value_str))
@@ -241,8 +247,8 @@ impl CSVDataSet {
                 "Boolean" => Value::Bool(value_str.parse()?),
                 "Array[Boolean]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())
-                        .unwrap_or_else(|_| Value::String(value_str.clone()))
+                    for v in serde_json::from_str::<Value>(value_str)
+                        .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("\"{}\" value is not an array", value_str))
@@ -252,11 +258,11 @@ impl CSVDataSet {
                     }
                     Value::Array(parsed)
                 }
-                "Date" => Value::String(value_str),
+                "Date" => value.clone(),
                 "Array[Date]" => {
                     let mut parsed = vec![];
-                    for v in serde_json::from_str::<Value>(value_str.as_str())
-                        .unwrap_or_else(|_| Value::String(value_str.clone()))
+                    for v in serde_json::from_str::<Value>(value_str)
+                        .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
                             GenericError::from(format!("\"{}\" value is not an array", value_str))

@@ -286,7 +286,7 @@ test2@example.com;["B"]"#
     fn transform_data_with_entry_code_mapping_overlay() {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
-        transformer.add_data_set(
+        let result = transformer.add_data_set(
             CSVDataSet::new(
                 r#"email*;licenses*
 a@a.com;["a"]"#
@@ -307,9 +307,10 @@ a@a.com;["a"]"#
             ]),
         );
 
+        assert!(result.is_ok());
         assert_eq!(
             transformer.get_raw_datasets(),
-            vec!["email*;licenses*\n\"a@a.com\";[\"A\"]",]
+            vec!["email*;licenses*\na@a.com;[\"A\"]",]
         )
     }
 
@@ -339,11 +340,12 @@ a@a.com;["A"]"#
     }
 }
               "#,
-            ]);
+            ])
+            .unwrap();
 
         assert_eq!(
             transformer.get_raw_datasets(),
-            vec!["email*;licenses*\n\"a@a.com\";[\"1\"]",]
+            vec!["email*;licenses*\na@a.com;[\"1\"]",]
         )
     }
 
@@ -351,7 +353,7 @@ a@a.com;["A"]"#
     fn transform_data_with_unit_overlay() {
         let oca = setup_oca();
         let mut transformer = Transformer::new(oca);
-        transformer.add_data_set(
+        let result = transformer.add_data_set(
             CSVDataSet::new(
                 r#"email*;licenses*;number
 a@a.com;["A"];3.2808"#
@@ -369,9 +371,10 @@ a@a.com;["A"];3.2808"#
             ]),
         );
 
+        assert!(result.is_ok());
         assert_eq!(
             transformer.get_raw_datasets(),
-            vec!["email*;licenses*;number\n\"a@a.com\";[\"A\"];100.0",]
+            vec!["email*;licenses*;number\na@a.com;[\"A\"];100.0",]
         )
     }
 
@@ -398,11 +401,12 @@ a@a.com;["A"];100"#
     "attr_units":{"number":"m"}
 }
               "#,
-            ]);
+            ])
+            .unwrap();
 
         assert_eq!(
             transformer.get_raw_datasets(),
-            vec!["email*;licenses*;number\n\"a@a.com\";[\"A\"];1.0",]
+            vec!["email*;licenses*;number\na@a.com;[\"A\"];1.0",]
         )
     }
 
