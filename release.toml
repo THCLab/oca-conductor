@@ -1,3 +1,6 @@
+consolidate-commits=true
+consolidate-pushes=true
+publish=false
 tag-name = "v{{version}}"
 pre-release-replacements = [
   {file="../bindings/node.js/pkg/validator/package.json", search="\"version\": \"[a-z0-9\\.-]+\"", replace="\"version\": \"{{version}}\"", exactly=1},
