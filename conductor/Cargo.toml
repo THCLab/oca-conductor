@@ -16,7 +16,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 csv = "1.1"
-oca-rust = "0.1.44"
+oca-rust = "0.1.45"
 serde_json = { version = "1.0.82", features = ["preserve_order"] }
 serde = { version = "1.0", features = ["derive"] }
 erased-serde = "0.3.23"

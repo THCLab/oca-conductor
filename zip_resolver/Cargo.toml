@@ -8,6 +8,6 @@ license = "EUPL-1.2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-oca-rust = "0.1.44"
+oca-rust = "0.1.45"
 serde_json = "1.0.82"
 zip = "0.6.2"
