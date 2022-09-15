@@ -14,7 +14,7 @@ transformer = ["oca_conductor/transformer"]
 [dependencies]
 napi = { version = "2.6.3", features = ["serde-json"] }
 napi-derive = "2.6.0"
-oca-rust = "0.1.42"
+oca-rust = "0.1.45"
 oca_conductor = { path = "../../conductor" }
 oca_zip_resolver = { path = "../../zip_resolver" }
 serde_json = "1.0.82"

@@ -34,7 +34,7 @@ test@example.com,["a"]`, ','
       ])
       const result = transformer.getRawDatasets()
       expect(result.length).to.be.eq(1)
-      expect(result[0]).to.be.eq('email*,licenses*\n"test@example.com",["A"]')
+      expect(result[0]).to.be.eq('email*,licenses*\ntest@example.com,["A"]')
     })
 
     it("should throw errors when data_set is invalid", () => {
@@ -95,7 +95,7 @@ test@example.com,["A"]`, ','
       ])
       const result = transformer.getRawDatasets()
       expect(result.length).to.be.eq(1)
-      expect(result[0]).to.be.eq('email:,licenses*\n"test@example.com",["1"]')
+      expect(result[0]).to.be.eq('email:,licenses*\ntest@example.com,["1"]')
     })
   })
 })
