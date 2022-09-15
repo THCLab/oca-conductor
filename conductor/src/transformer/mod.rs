@@ -56,9 +56,9 @@ impl Transformer {
                             )))
                         }
                     }
-                    Err(_) => errors.push(GenericError::from(format!(
-                        "Overlay at position {}: Parsing failed. Invalid format.",
-                        i
+                    Err(e) => errors.push(GenericError::from(format!(
+                        "Overlay at position {}: Parsing failed. {}",
+                        i, e
                     ))),
                 }
             }
@@ -107,9 +107,9 @@ impl Transformer {
                         )))
                     }
                 }
-                Err(_) => errors.push(GenericError::from(format!(
-                    "Overlay at position {}: Parsing failed. Invalid format.",
-                    i
+                Err(e) => errors.push(GenericError::from(format!(
+                    "Overlay at position {}: Parsing failed. {}",
+                    i, e
                 ))),
             }
         }
@@ -407,6 +407,65 @@ a@a.com;["A"];100"#
         assert_eq!(
             transformer.get_raw_datasets(),
             vec!["email*;licenses*;number\na@a.com;[\"A\"];1.0",]
+        )
+    }
+
+    #[test]
+    fn transform_data_with_subset_overlay() {
+        let oca = setup_oca();
+        let mut transformer = Transformer::new(oca);
+        let result = transformer.add_data_set(
+            CSVDataSet::new(
+                r#"email*;licenses*;number
+a@a.com;["A"];100"#
+                    .to_string(),
+            ),
+            Some(vec![
+                r#"
+    {
+        "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+        "type":"spec/overlays/subset/1.0",
+        "attributes":["email*","licenses*"]
+    }
+                "#,
+            ]),
+        );
+
+        assert!(result.is_ok());
+        assert_eq!(
+            transformer.get_raw_datasets(),
+            vec!["email*;licenses*\na@a.com;[\"A\"]",]
+        )
+    }
+
+    #[test]
+    fn transform_with_subset_overlay() {
+        let oca = setup_oca();
+        let mut transformer = Transformer::new(oca);
+        let result = transformer
+            .add_data_set(
+                CSVDataSet::new(
+                    r#"email*;licenses*;number
+a@a.com;["A"];100"#
+                        .to_string(),
+                ),
+                None,
+            )
+            .unwrap()
+            .transform(vec![
+                r#"
+{
+    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "type":"spec/overlays/subset/1.0",
+    "attributes":["email*","licenses*"]
+}
+              "#,
+            ]);
+
+        assert!(result.is_ok());
+        assert_eq!(
+            transformer.get_raw_datasets(),
+            vec!["email*;licenses*\na@a.com;[\"A\"]",]
         )
     }
 

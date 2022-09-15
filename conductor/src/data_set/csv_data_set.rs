@@ -95,23 +95,43 @@ impl DataSet for CSVDataSet {
     fn transform_schema(
         &self,
         mappings: BTreeMap<String, String>,
+        subset_attributes_op: Option<Vec<String>>,
     ) -> Result<Box<dyn DataSet>, GenericError> {
         let mut transformed_raw = self.raw.clone();
         if let Some(header_line) = transformed_raw.lines().take(1).next() {
-            let headers = header_line
+            let mut headers = header_line
                 .split(self.delimiter)
                 .map(|header| match mappings.get(header) {
                     Some(mapping) => mapping,
                     None => header,
                 })
                 .collect::<Vec<&str>>();
-            transformed_raw = headers.join(&self.delimiter.to_string())
-                + "\n"
-                + &transformed_raw
-                    .lines()
-                    .skip(1)
-                    .collect::<Vec<&str>>()
-                    .join("\n");
+            let mut records = transformed_raw
+                .lines()
+                .skip(1)
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>();
+
+            if let Some(subset_attributes) = subset_attributes_op {
+                let keep: Vec<bool> = headers
+                    .clone()
+                    .iter()
+                    .map(|attr_name| subset_attributes.contains(&attr_name.to_string()))
+                    .collect();
+                let mut iter = keep.iter();
+                headers.retain(|_| *iter.next().unwrap());
+                records = records
+                    .iter()
+                    .map(|record| {
+                        let mut iter = keep.iter();
+                        let mut r = record.split(self.delimiter).collect::<Vec<&str>>();
+                        r.retain(|_| *iter.next().unwrap());
+                        r.join(&self.delimiter.to_string())
+                    })
+                    .collect::<Vec<String>>();
+            }
+            transformed_raw =
+                headers.join(&self.delimiter.to_string()) + "\n" + &records.join("\n");
         }
         Ok(Box::new(
             Self::new(transformed_raw).delimiter(self.delimiter),

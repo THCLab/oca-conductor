@@ -24,6 +24,7 @@ pub trait DataSet: erased_serde::Serialize + dyn_clone::DynClone {
     fn transform_schema(
         &self,
         mappings: BTreeMap<String, String>,
+        subset_attributes_op: Option<Vec<String>>,
     ) -> Result<Box<dyn DataSet>, GenericError>;
     #[cfg(feature = "transformer")]
     fn transform_data(

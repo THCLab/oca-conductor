@@ -12,6 +12,7 @@ pub fn transform_pre(
     let mut entry_code_mappings: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
     let mut target_units: BTreeMap<String, String> = BTreeMap::new();
     let mut unit_transformation_operations: BTreeMap<String, Vec<Operation>> = BTreeMap::new();
+    let mut subset_attributes: Vec<String> = vec![];
 
     let mut transformed_data_set = data_set.clone();
 
@@ -25,6 +26,9 @@ pub fn transform_pre(
         if let Some(units) = get_units(overlay) {
             target_units.extend(units);
         }
+        if let Some(attributes) = get_subset_attributes(&overlay) {
+            subset_attributes.extend(attributes);
+        }
     }
 
     if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
@@ -37,15 +41,20 @@ pub fn transform_pre(
             .unwrap()
     }
 
-    if !attribute_mappings.is_empty() {
+    if !attribute_mappings.is_empty() || !subset_attributes.is_empty() {
+        let mut subset_attributes_op = None;
+        if !subset_attributes.is_empty() {
+            subset_attributes_op = Some(subset_attributes.clone());
+        }
         transformed_data_set = transformed_data_set
-            .transform_schema(attribute_mappings.clone())
+            .transform_schema(attribute_mappings.clone(), subset_attributes_op)
             .unwrap();
     }
 
     for overlay in additional_overlays {
         attribute_mappings = BTreeMap::new();
         entry_code_mappings = BTreeMap::new();
+        subset_attributes = vec![];
         let mut source_units: BTreeMap<String, String> = BTreeMap::new();
         if let Some(mappings) = get_attribute_mappings(&overlay) {
             attribute_mappings.extend(mappings);
@@ -55,6 +64,9 @@ pub fn transform_pre(
         }
         if let Some(units) = get_units(&overlay) {
             source_units.extend(units);
+        }
+        if let Some(attributes) = get_subset_attributes(&overlay) {
+            subset_attributes.extend(attributes);
         }
 
         for (k, source_unit) in &source_units {
@@ -80,9 +92,13 @@ pub fn transform_pre(
                 .unwrap()
         }
 
-        if !attribute_mappings.is_empty() {
+        if !attribute_mappings.is_empty() || !subset_attributes.is_empty() {
+            let mut subset_attributes_op = None;
+            if !subset_attributes.is_empty() {
+                subset_attributes_op = Some(subset_attributes.clone());
+            }
             transformed_data_set = transformed_data_set
-                .transform_schema(attribute_mappings.clone())
+                .transform_schema(attribute_mappings.clone(), subset_attributes_op)
                 .unwrap();
         }
     }
@@ -99,6 +115,7 @@ pub fn transform_post(
     let mut source_units: BTreeMap<String, String> = BTreeMap::new();
     let mut target_units: BTreeMap<String, String> = BTreeMap::new();
     let mut unit_transformation_operations: BTreeMap<String, Vec<Operation>> = BTreeMap::new();
+    let mut subset_attributes: Vec<String> = vec![];
 
     let mut transformed_data_set = data_set.clone();
 
@@ -131,6 +148,9 @@ pub fn transform_post(
         if let Some(units) = get_units(&overlay) {
             target_units.extend(units);
         }
+        if let Some(attributes) = get_subset_attributes(&overlay) {
+            subset_attributes.extend(attributes);
+        }
 
         for (k, target_unit) in &target_units {
             if let Some(source_unit) = source_units.get(k) {
@@ -145,9 +165,13 @@ pub fn transform_post(
             }
         }
 
-        if !attribute_mappings.is_empty() {
+        if !attribute_mappings.is_empty() || !subset_attributes.is_empty() {
+            let mut subset_attributes_op = None;
+            if !subset_attributes.is_empty() {
+                subset_attributes_op = Some(subset_attributes.clone());
+            }
             transformed_data_set = transformed_data_set
-                .transform_schema(attribute_mappings.clone())
+                .transform_schema(attribute_mappings.clone(), subset_attributes_op)
                 .unwrap();
         }
 
@@ -301,6 +325,15 @@ fn get_units(overlay: &DynOverlay) -> Option<BTreeMap<String, String>> {
                 )
                 .collect(),
         );
+    }
+    None
+}
+
+fn get_subset_attributes(overlay: &DynOverlay) -> Option<Vec<String>> {
+    if overlay.overlay_type().contains("/subset/") {
+        if let Some(ov) = overlay.as_any().downcast_ref::<overlay::Subset>() {
+            return Some(ov.attributes.clone());
+        }
     }
     None
 }
