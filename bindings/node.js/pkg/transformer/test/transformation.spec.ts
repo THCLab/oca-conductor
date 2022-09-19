@@ -13,18 +13,18 @@ test@example.com,["a"]`, ','
         ), [
         `
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attribute_mapping": {
         "email*":"e-mail*"
     }
 }
         `,
         `
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/entry_code_mapping/1.0",
-    "attr_entry_codes_mapping": {
+    "attribute_entry_codes_mapping": {
         "licenses*": [
             "a:A","b:B","c:C","d:D","e:E"
         ]
@@ -50,9 +50,9 @@ test@example.com,["a"]`, ','
             ), [
             `
     {
-        "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+        "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
         "type":"spec/overlays/mapping/1.0",
-        "attr_mapping": {
+        "attribute_mapping": {
             "email*":"e-mail*"
         }
     }
@@ -74,18 +74,18 @@ test@example.com,["A"]`, ','
       ).transform([
         `
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attribute_mapping": {
         "email*":"email:"
     }
 }
         `,
         `
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/entry_code_mapping/1.0",
-    "attr_entry_codes_mapping": {
+    "attribute_entry_codes_mapping": {
         "licenses*": [
             "A:1","B:2","C:3","D:4","E:5"
         ]

@@ -120,11 +120,11 @@ impl Validator {
             if conformance.eq("M") {
                 match value {
                     Value::Null => {
-                        errors.push(format!("'{}' value is mandatory", validator.attr_name));
+                        errors.push(format!("'{}' value is mandatory", validator.attribute_name));
                     }
                     Value::String(v) => {
                         if v.trim().is_empty() {
-                            errors.push(format!("'{}' value is mandatory", validator.attr_name));
+                            errors.push(format!("'{}' value is mandatory", validator.attribute_name));
                         }
                     }
                     _ => {}
@@ -133,12 +133,12 @@ impl Validator {
         }
 
         if !value.is_null() {
-            match validator.attr_type {
+            match validator.attribute_type {
                 AttributeType::Text => {
                     if !value.is_string() {
                         errors.push(format!(
                             "'{}' value ({}) must be a Text type",
-                            validator.attr_name, value
+                            validator.attribute_name, value
                         ));
                     } else if let Some(ref format) = validator.format {
                         let regex = Regex::new(format!("^{}$", format).as_str());
@@ -147,14 +147,14 @@ impl Validator {
                                 if !re.is_match(value.as_str().unwrap()) {
                                     errors.push(format!(
                                         "'{}' value ({}) must match defined format ({}) from Format overlay",
-                                        validator.attr_name, value, format
+                                        validator.attribute_name, value, format
                                     ));
                                 }
                             }
                             Err(_) => {
                                 errors.push(format!(
                                     "'{}' format definition is invalid",
-                                    validator.attr_name
+                                    validator.attribute_name
                                 ));
                             }
                         }
@@ -166,14 +166,14 @@ impl Validator {
                         if let Err(_err) = v.parse::<f64>() {
                             errors.push(format!(
                                 "'{}' value ({}) must be a Numeric type",
-                                validator.attr_name, value
+                                validator.attribute_name, value
                             ));
                         }
                     }
                     _ => {
                         errors.push(format!(
                             "'{}' value ({}) must be a Numeric type",
-                            validator.attr_name, value
+                            validator.attribute_name, value
                         ));
                     }
                 },
@@ -181,15 +181,15 @@ impl Validator {
                     if !value.is_boolean() {
                         errors.push(format!(
                             "'{}' value ({}) must be a Boolean type",
-                            validator.attr_name, value
+                            validator.attribute_name, value
                         ));
                     }
                 }
-                AttributeType::Date => {
+                AttributeType::DateTime => {
                     if !value.is_string() {
                         errors.push(format!(
-                            "'{}' value ({}) must be a Date type",
-                            validator.attr_name, value
+                            "'{}' value ({}) must be a DateTime type",
+                            validator.attribute_name, value
                         ));
                     }
                 }
@@ -197,7 +197,7 @@ impl Validator {
                     if !value.is_string() {
                         errors.push(format!(
                             "'{}' value ({}) must be a Binary type",
-                            validator.attr_name, value
+                            validator.attribute_name, value
                         ));
                     }
                 }
@@ -205,22 +205,22 @@ impl Validator {
                     if !value.is_object() {
                         errors.push(format!(
                             "'{}' value ({}) must be an object",
-                            validator.attr_name, value
+                            validator.attribute_name, value
                         ));
                     }
                 }
                 AttributeType::ArrayText
                 | AttributeType::ArrayNumeric
                 | AttributeType::ArrayBoolean
-                | AttributeType::ArrayDate
+                | AttributeType::ArrayDateTime
                 | AttributeType::ArrayBinary
                 | AttributeType::ArraySai => {
                     if !value.is_array() {
                         errors.push(format!(
                             "'{}' value ({}) must be an {}",
-                            validator.attr_name,
+                            validator.attribute_name,
                             value,
-                            serde_json::to_string(&validator.attr_type).unwrap()
+                            serde_json::to_string(&validator.attribute_type).unwrap()
                         ));
                     } else {
                         let value_elements = value.as_array().unwrap();
@@ -229,7 +229,7 @@ impl Validator {
                                 if conformance.eq("M") {
                                     errors.push(format!(
                                         "'{}' value ({}) cannot be empty",
-                                        validator.attr_name, value
+                                        validator.attribute_name, value
                                     ));
                                 }
                             }
@@ -249,7 +249,7 @@ impl Validator {
                 if value.is_string() && !codes.contains(&value.as_str().unwrap().to_string()) {
                     errors.push(format!(
                         "'{}' value ({}) must be one of {:?}",
-                        validator.attr_name, value, codes
+                        validator.attribute_name, value, codes
                     ));
                 }
             }
@@ -279,7 +279,7 @@ impl Validator {
                             .downcast_ref::<overlay::CharacterEncoding>()
                             .unwrap();
                         validator.encoding = Some(
-                            *ov.attr_character_encoding
+                            *ov.attribute_character_encoding
                                 .get(attr_name)
                                 .unwrap_or(&ov.default_character_encoding),
                         )
@@ -289,17 +289,17 @@ impl Validator {
                             .downcast_ref::<overlay::Conformance>()
                             .unwrap();
                         validator.conformance =
-                            Some(ov.attr_conformance.get(attr_name).unwrap().to_string())
+                            Some(ov.attribute_conformance.get(attr_name).unwrap().to_string())
                     } else if overlay.overlay_type().contains("/format/") {
                         let ov = overlay.as_any().downcast_ref::<overlay::Format>().unwrap();
-                        validator.format = Some(ov.attr_formats.get(attr_name).unwrap().to_string())
+                        validator.format = Some(ov.attribute_formats.get(attr_name).unwrap().to_string())
                     } else if overlay.overlay_type().contains("/entry_code/") {
                         let ov = overlay
                             .as_any()
                             .downcast_ref::<overlay::EntryCode>()
                             .unwrap();
                         validator.entry_codes =
-                            Some(ov.attr_entry_codes.get(attr_name).unwrap().clone())
+                            Some(ov.attribute_entry_codes.get(attr_name).unwrap().clone())
                     }
                 }
             }

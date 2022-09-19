@@ -274,10 +274,10 @@ fn get_attribute_mappings(overlay: &DynOverlay) -> Option<BTreeMap<String, Strin
             .downcast_ref::<overlay::AttributeMapping>()
             .unwrap();
         return Some(
-            ov.attr_mapping
+            ov.attribute_mapping
                 .values()
                 .cloned()
-                .zip(ov.attr_mapping.keys().cloned())
+                .zip(ov.attribute_mapping.keys().cloned())
                 .collect(),
         );
     }
@@ -294,7 +294,7 @@ fn get_entry_code_mappings(
             .unwrap();
         let mut entry_code_mappings_tmp = BTreeMap::new();
 
-        for (attr_name, value) in &ov.attr_entry_codes_mapping {
+        for (attr_name, value) in &ov.attribute_entry_codes_mapping {
             let mut mappings = BTreeMap::new();
             for v in value {
                 let splitted = v.split(':').collect::<Vec<&str>>();
@@ -314,11 +314,11 @@ fn get_units(overlay: &DynOverlay) -> Option<BTreeMap<String, String>> {
     if overlay.overlay_type().contains("/unit/") {
         let ov = overlay.as_any().downcast_ref::<overlay::Unit>().unwrap();
         return Some(
-            ov.attr_units
+            ov.attribute_units
                 .keys()
                 .cloned()
                 .zip(
-                    ov.attr_units
+                    ov.attribute_units
                         .values()
                         .map(|v| format!("{}:{}", ov.metric_system, v))
                         .collect::<Vec<String>>(),

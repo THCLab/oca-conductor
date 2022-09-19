@@ -278,8 +278,8 @@ impl CSVDataSet {
                     }
                     Value::Array(parsed)
                 }
-                "Date" => value.clone(),
-                "Array[Date]" => {
+                "DateTime" => value.clone(),
+                "Array[DateTime]" => {
                     let mut parsed = vec![];
                     for v in serde_json::from_str::<Value>(value_str)
                         .unwrap_or_else(|_| Value::String(value_str.to_string()))
@@ -288,7 +288,7 @@ impl CSVDataSet {
                             GenericError::from(format!("\"{}\" value is not an array", value_str))
                         })?
                     {
-                        parsed.push(Self::parse_value(v, "Date")?)
+                        parsed.push(Self::parse_value(v, "DateTime")?)
                     }
                     Value::Array(parsed)
                 }
@@ -351,7 +351,7 @@ test@example.com"#
         let array_types = vec![
             "Array[Text]",
             "Array[Numeric]",
-            "Array[Date]",
+            "Array[DateTime]",
             "Array[Boolean]",
         ];
         for array_type in array_types {

@@ -10,7 +10,7 @@ const mapping_overlay = `
 {
         "capture_base":"Ev_RaB-gIOn8VAB3sg40mINxjiYRxdLVQrgce0aZbFcc",
         "type":"spec/overlays/mapping/1.0",
-        "attr_mapping":{
+        "attribute_mapping":{
             "first_name":"firstName",
             "last_name":"surname"
         }
@@ -22,7 +22,7 @@ const unit_overlay = `
   "capture_base":"Ev_RaB-gIOn8VAB3sg40mINxjiYRxdLVQrgce0aZbFcc",
   "type":"spec/overlays/unit/1.0",
   "metric_system":"SI",
-  "attr_units":{"blood_glucose":"mg/dL"}
+  "attribute_units":{"blood_glucose":"mg/dL"}
 }
   `
 transformer.addDataSet(

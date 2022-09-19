@@ -178,9 +178,9 @@ test@example.com;["A"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attribute_mapping": {
         "email*":"e-mail*"
     }
 }
@@ -197,9 +197,9 @@ test2@example.com;["B"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attribute_mapping": {
         "email*":"e-mail"
     }
 }
@@ -231,9 +231,9 @@ test@example.com;["A"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attribute_mapping": {
         "email*":"e-mail*"
     }
 }
@@ -250,9 +250,9 @@ test2@example.com;["B"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attribute_mapping": {
         "email*":"e-mail"
     }
 }
@@ -263,9 +263,9 @@ test2@example.com;["B"]"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/mapping/1.0",
-    "attr_mapping": {
+    "attribute_mapping": {
         "email*":"email:"
     }
 }
@@ -295,9 +295,9 @@ a@a.com;["a"]"#
             Some(vec![
                 r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/entry_code_mapping/1.0",
-    "attr_entry_codes_mapping": {
+    "attribute_entry_codes_mapping": {
         "licenses*": [
             "a:A","b:B","c:C","d:D","e:E"
         ]
@@ -331,9 +331,9 @@ a@a.com;["A"]"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/entry_code_mapping/1.0",
-    "attr_entry_codes_mapping": {
+    "attribute_entry_codes_mapping": {
         "licenses*": [
             "A:1","B:2","C:3","D:4","E:5"
         ]
@@ -362,10 +362,10 @@ a@a.com;["A"];3.2808"#
             Some(vec![
                 r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/unit/1.0",
     "metric_system":"IU",
-    "attr_units":{"number":"ft"}
+    "attribute_units":{"number":"ft"}
 }
               "#,
             ]),
@@ -395,10 +395,10 @@ a@a.com;["A"];100"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/unit/1.0",
     "metric_system":"SI",
-    "attr_units":{"number":"m"}
+    "attribute_units":{"number":"m"}
 }
               "#,
             ])
@@ -423,7 +423,7 @@ a@a.com;["A"];100"#
             Some(vec![
                 r#"
     {
-        "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+        "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
         "type":"spec/overlays/subset/1.0",
         "attributes":["email*","licenses*"]
     }
@@ -455,7 +455,7 @@ a@a.com;["A"];100"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EKmZWuURpiUdl_YAMGQbLiossAntKt1DJ0gmUMYSz7Yo",
+    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
     "type":"spec/overlays/subset/1.0",
     "attributes":["email*","licenses*"]
 }
