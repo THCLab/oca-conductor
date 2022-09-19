@@ -1,7 +1,7 @@
 [package]
 name = "oca_zip_resolver"
 description = "Lib for resolving OCA Bundle from zip file to OCA struct"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 license = "EUPL-1.2"
 
