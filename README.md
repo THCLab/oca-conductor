@@ -15,7 +15,7 @@ One of the fundamental concepts behind OCA is data harmonization. To harmonize d
 [dependencies]
 oca_conductor = "0.2.3"
 ```
-### Typescript and JavaScript
+### Typescript and JavaScript (Node.JS based)
 
 - For `oca-transformer`
   ```
