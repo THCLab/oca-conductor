@@ -8,6 +8,9 @@ One of the fundamental concepts behind OCA is data harmonization. To harmonize d
 - data validation where provided data record is verified against schema defined within `OCA Bundle`;
 - data transformation where injected datasets are transformed to the new state using transformation overlays.
 
+`OCA conductor` is written in Rust thanks to which most C-based languages can be supported by exposing proper FFI-layer. We provide bindings for the following languages:
+- [Typescript/Javascript](/bindings/node.js)
+
 ## Installation
 
 ### Rust
