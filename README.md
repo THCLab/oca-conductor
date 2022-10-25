@@ -4,6 +4,24 @@
 
 One of the fundamental concepts behind OCA is data harmonization. To harmonize data is to unify two or more datasets to be compliant to each other so that further processing can be performed on unified data. Harmonization may take place on the dataset level, where as a result all the datasets become unified to the same schema. Another type of harmonization is to achieve a compliant subset among schemas. The process to achieve harmonization is called a transformation. Transformation overlays are the recipe to how actually data (or schema) should be transformed. 
 
+## Installation
+
+### Rust
+```
+[dependencies]
+oca_conductor = "0.2.3"
+```
+### Typescript and JavaScript
+
+- For `oca-transformer`
+  ```
+  npm i oca-data-transformer
+  ```
+- For `oca-validator`
+  ```
+  npm i oca-data-validator
+  ```
+
 ## Transformation overlays
 
 ### Attribute Mapping Overlay
