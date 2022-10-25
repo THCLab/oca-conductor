@@ -4,6 +4,10 @@
 
 One of the fundamental concepts behind OCA is data harmonization. To harmonize data is to unify two or more datasets to be compliant to each other so that further processing can be performed on unified data. Harmonization may take place on the dataset level, where as a result all the datasets become unified to the same schema. Another type of harmonization is to achieve a compliant subset among schemas. The process to achieve harmonization is called a transformation. Transformation overlays are the recipe to how actually data (or schema) should be transformed. 
 
+`OCA conductor` serves dual purpose:
+- data validation where provided data record is verified against schema defined within `OCA Bundle`;
+- data transformation where injected datasets are transformed to the new state using transformation overlays.
+
 ## Installation
 
 ### Rust
