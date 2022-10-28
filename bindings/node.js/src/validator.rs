@@ -1,16 +1,16 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-use crate::{DataSetType, DataSetLoaderRouter};
-use oca_conductor::data_set::{DataSet, CSVDataSet};
-use oca_conductor::errors::GenericError;
+use oca_conductor::data_set::{DataSet, JSONDataSet};
 use oca_conductor::validator::ConstraintsConfig;
+use oca_conductor::validator::ValidationError;
 use oca_conductor::Validator;
 use oca_rust::state::oca::OCA;
 
 #[napi(js_name = "Validator")]
 pub struct ValidatorWrapper {
     base: Validator,
+    many: bool
 }
 
 #[napi]
@@ -18,38 +18,32 @@ impl ValidatorWrapper {
     #[napi(constructor)]
     pub fn new(env: Env, oca: napi::JsObject) -> Result<Self> {
         let base = Validator::new(env.from_js_value::<OCA, napi::JsObject>(oca)?);
-        Ok(Self { base })
+        Ok(Self { base, many: false })
     }
 
     #[napi]
     pub fn set_constraints(
         &mut self,
         #[napi(ts_arg_type = "ConstraintsConfig")] config: ConstraintsConfigWrapper,
-    ) {
+    ) -> &Self {
         self.base.set_constraints(config.to_base());
+        self
     }
 
     #[napi]
-    pub fn add_data_set(
+    pub fn validate(
         &mut self,
-        #[napi(ts_arg_type = "CSVDataSet")] data_set: &DataSetLoaderRouter,
-    ) {
-        match data_set.t {
-            DataSetType::CSVDataSet => {
-                let mut internal_data_set = CSVDataSet::new(data_set.raw.clone());
-                if let Some(delimiter) = &data_set.delimiter {
-                    if let Some(sign) = delimiter.chars().collect::<Vec<char>>().first() {
-                        internal_data_set.delimiter(*sign);
-                    }
-                }
-                self.base.add_data_set(internal_data_set);
-            }
+        env: Env,
+        #[napi(ts_arg_type = "object | object[]")] record: Object
+    ) -> ValidationResult {
+        let record_val = env.from_js_value::<serde_json::Value, napi::JsObject>(record).unwrap();
+        if record_val.is_array() {
+            self.many = true
         }
-    }
-
-    #[napi]
-    pub fn validate(&self) -> ValidationResult {
-        ValidationResult::init(self.base.validate())
+        self.base.add_data_set(JSONDataSet::new(
+            serde_json::to_string(&record_val).unwrap()
+        ));
+        ValidationResult::init(self.base.validate(), self.many)
     }
 
     #[napi]
@@ -77,11 +71,11 @@ impl ConstraintsConfigWrapper {
 #[napi(object)]
 pub struct ValidationResult {
     pub success: bool,
-    pub errors: Option<Vec<String>>,
+    pub errors: Option<serde_json::Value>,
 }
 
 impl ValidationResult {
-    fn init(result: std::result::Result<(), Vec<GenericError>>) -> Self {
+    fn init(result: std::result::Result<(), Vec<ValidationError>>, many_records: bool) -> Self {
         match result {
             Ok(_) => Self {
                 success: true,
@@ -89,8 +83,31 @@ impl ValidationResult {
             },
             Err(errors) => Self {
                 success: false,
-                errors: Some(errors.iter().map(|e| e.to_string()).collect())
+                errors: Some(Self::format_errors(errors, many_records))
             }
         }
+    }
+
+    fn format_errors(errors: Vec<ValidationError>, many_records: bool) -> serde_json::Value {
+        let mut result_map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+        for error in errors {
+            if many_records {
+                match result_map.get_mut(&error.record) {
+                    Some(record_errors) => {
+                        if let serde_json::Value::Object(record_errors_map) = record_errors {
+                            record_errors_map.insert(error.attribute_name, serde_json::Value::String(error.message));
+                        }
+                    },
+                    None => {
+                        let mut record_errors_map = serde_json::Map::new();
+                        record_errors_map.insert(error.attribute_name, serde_json::Value::String(error.message));
+                        result_map.insert(error.record, serde_json::Value::Object(record_errors_map));
+                    }
+                }
+            } else {
+                result_map.insert(error.attribute_name, serde_json::Value::String(error.message));
+            }
+        }
+        serde_json::Value::Object(result_map)
     }
 }

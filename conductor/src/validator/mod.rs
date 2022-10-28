@@ -1,4 +1,3 @@
-use crate::errors::GenericError;
 use oca_rust::state::{attribute::AttributeType, entry_codes::EntryCodes, oca::overlay, oca::OCA};
 use regex::Regex;
 use serde_json::Value;
@@ -8,6 +7,30 @@ mod attribute_validator;
 use attribute_validator::AttributeValidator;
 
 use crate::data_set::DataSet;
+
+#[derive(Debug)]
+pub struct ValidationError {
+    pub data_set: String,
+    pub record: String,
+    pub attribute_name: String,
+    pub message: String
+}
+
+impl ValidationError {
+    pub fn new(data_set: String, record: String, attribute_name: String, message: String) -> Self {
+        Self { data_set, record, attribute_name, message }
+    }
+}
+
+impl std::error::Error for ValidationError {}
+impl std::fmt::Display for ValidationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f,
+            "Data Set: {}, Record {}: '{}' {}",
+            self.data_set, self.record, self.attribute_name, self.message
+        )
+    }
+}
 
 pub struct Validator {
     pub data_sets: Vec<Box<dyn DataSet>>,
@@ -40,8 +63,8 @@ impl Validator {
         self
     }
 
-    pub fn validate(&self) -> Result<(), Vec<GenericError>> {
-        let mut validation_errors: Vec<GenericError> = vec![];
+    pub fn validate(&self) -> Result<(), Vec<ValidationError>> {
+        let mut validation_errors: Vec<ValidationError> = vec![];
 
         let mandatory_attribute_names = self
             .attribute_validators
@@ -58,7 +81,14 @@ impl Validator {
 
         for (data_set_index, data_set) in self.data_sets.iter().enumerate() {
             for (record_index, record) in data_set
-                .load(self.attribute_types.clone())?
+                .load(self.attribute_types.clone())
+                .map_err(|errors| {
+                    errors.iter().map(|_e|
+                        ValidationError::new(
+                            "".to_string(), "".to_string(), "".to_string(), "".to_string()
+                        )
+                    ).collect::<Vec<ValidationError>>()
+                })?
                 .iter()
                 .enumerate()
             {
@@ -67,19 +97,20 @@ impl Validator {
                     missing_attribute_names.retain(|n| n.ne(&k));
 
                     let attribute_validator = self.attribute_validators.get(k).ok_or_else(|| {
-                        GenericError::from(format!(
-                            "Data Set: {}, Record {}: '{}' attribute doesn't occur in OCA",
-                            data_set_index, record_index, k
-                        ))
+                        ValidationError::new(
+                            data_set_index.to_string(), record_index.to_string(), k.to_string(),
+                            "unknown_attribute".to_string()
+                        )
                     });
                     match attribute_validator {
                         Ok(validator) => {
                             if let Err(errors) = self.validate_value(v, validator) {
                                 for error in errors {
-                                    validation_errors.push(GenericError::from(format!(
-                                        "Data Set: {}, Record {}: {}",
-                                        data_set_index, record_index, error
-                                    )));
+                                    validation_errors.push(
+                                        ValidationError::new(
+                                            data_set_index.to_string(), record_index.to_string(), k.to_string(), error
+                                        )
+                                    );
                                 }
                             }
                         }
@@ -94,10 +125,12 @@ impl Validator {
                     }
                 }
                 for missing_attribute_name in missing_attribute_names {
-                    validation_errors.push(GenericError::from(format!(
-                        "Data Set {}, Record {}: '{}' attribute is missing",
-                        data_set_index, record_index, missing_attribute_name
-                    )));
+                    validation_errors.push(
+                        ValidationError::new(
+                            data_set_index.to_string(), record_index.to_string(), missing_attribute_name.to_string(),
+                            "missing_attribute".to_string()
+                        )
+                    );
                 }
             }
         }
@@ -120,11 +153,11 @@ impl Validator {
             if conformance.eq("M") {
                 match value {
                     Value::Null => {
-                        errors.push(format!("'{}' value is mandatory", validator.attribute_name));
+                        errors.push("missing_value".to_string());
                     }
                     Value::String(v) => {
                         if v.trim().is_empty() {
-                            errors.push(format!("'{}' value is mandatory", validator.attribute_name));
+                            errors.push("missing_value".to_string());
                         }
                     }
                     _ => {}
@@ -314,6 +347,7 @@ impl Validator {
 mod tests {
     use super::*;
     use crate::data_set::CSVDataSet;
+    use crate::data_set::JSONDataSet;
 
     fn setup_oca() -> OCA {
         let common_assets_dir_path = format!("{}/../assets", env!("CARGO_MANIFEST_DIR"));
@@ -322,6 +356,27 @@ mod tests {
         );
         assert!(oca_result.is_ok());
         oca_result.unwrap()
+    }
+
+    #[test]
+    fn validation_of_proper_json_data_set_should_return_successful_validation_result() {
+        let oca = setup_oca();
+        let mut validator = Validator::new(oca);
+        validator.add_data_set(JSONDataSet::new(
+            r#"{
+"email*": "test@example.com",
+"licenses*": ["A"],
+"number": 24,
+"numbers": [22, "23"],
+"date": "01.01.1999",
+"dates": ["01.01.2000"],
+"bool": true,
+"bools": [false, true]
+      }"#
+                .to_string(),
+        ));
+        let validation_result = validator.validate();
+        assert!(validation_result.is_ok());
     }
 
     #[test]
