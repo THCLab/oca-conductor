@@ -8,4 +8,5 @@ pre-release-replacements = [
   {file="../bindings/node.js/pkg/transformer/package.json", search="\"version\": \"[a-z0-9\\.-]+\"", replace="\"version\": \"{{version}}\"", exactly=1},
   {file="../conductor/Cargo.toml", search="\nversion = \"[a-z0-9\\.-]+\"", replace="\nversion = \"{{version}}\"", exactly=1},
   {file="../zip_resolver/Cargo.toml", search="\nversion = \"[a-z0-9\\.-]+\"", replace="\nversion = \"{{version}}\"", exactly=1},
+  {file="../README.md", search="oca_conductor = .*", replace="oca_conductor = \"{{version}}\""},
 ]
