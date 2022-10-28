@@ -61,7 +61,7 @@ describe("Validator", () => {
       expect(result.success).to.be.false
     })
 
-    it("should return successful validation result when data set has addtional attribute", () => {
+    it("should return unsuccessful validation result when record has additional attribute", () => {
       const oca = resolveFromZip(`${__dirname}/../../../../../assets/oca_bundle.zip`)
       const validator = new Validator(oca)
       validator.setConstraints({
