@@ -1,6 +1,6 @@
 {
   "name": "oca-data-transformer",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Node bindings to oca-conductor transformer (Rust)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
