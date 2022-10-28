@@ -85,7 +85,7 @@ impl Transformer {
                 self.data_sets.push(transformed_data_set);
                 Ok(self)
             }
-            Err(errors) => Err(errors),
+            Err(errors) => Err(errors.iter().map(|e| GenericError::from(e.to_string())).collect::<Vec<GenericError>>()),
         }
     }
 
