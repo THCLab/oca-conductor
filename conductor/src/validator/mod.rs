@@ -233,7 +233,7 @@ impl Validator {
                         ));
                     }
                 }
-                AttributeType::Sai => {
+                AttributeType::Reference => {
                     if !value.is_object() {
                         errors.push(format!(
                             "'{}' value ({}) must be an object",
@@ -246,7 +246,7 @@ impl Validator {
                 | AttributeType::ArrayBoolean
                 | AttributeType::ArrayDateTime
                 | AttributeType::ArrayBinary
-                | AttributeType::ArraySai => {
+                | AttributeType::ArrayReference => {
                     if !value.is_array() {
                         errors.push(format!(
                             "'{}' value ({}) must be an {}",

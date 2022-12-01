@@ -28,7 +28,7 @@ impl AttributeValidator {
             AttributeType::ArrayBoolean => AttributeType::Boolean,
             AttributeType::ArrayDateTime => AttributeType::DateTime,
             AttributeType::ArrayBinary => AttributeType::Binary,
-            AttributeType::ArraySai => AttributeType::Sai,
+            AttributeType::ArrayReference => AttributeType::Reference,
             _ => return None,
         };
         Some(AttributeValidator {
