@@ -104,7 +104,7 @@ impl Validator {
                     });
                     match attribute_validator {
                         Ok(validator) => {
-                            if let Err(errors) = self.validate_value(v, validator) {
+                            if let Err(errors) = Validator::validate_value(v, validator) {
                                 for error in errors {
                                     validation_errors.push(
                                         ValidationError::new(
@@ -143,7 +143,6 @@ impl Validator {
     }
 
     fn validate_value(
-        &self,
         value: &Value,
         validator: &AttributeValidator,
     ) -> Result<(), Vec<String>> {
@@ -269,7 +268,7 @@ impl Validator {
                         }
                         for (i, element) in value_elements.iter().enumerate() {
                             if let Err(errs) =
-                                self.validate_value(element, &validator.element(i).unwrap())
+                                Validator::validate_value(element, &validator.element(i).unwrap())
                             {
                                 errors.extend(errs);
                             }

@@ -26,7 +26,7 @@ pub fn transform_pre(
         if let Some(units) = get_units(overlay) {
             target_units.extend(units);
         }
-        if let Some(attributes) = get_subset_attributes(&overlay) {
+        if let Some(attributes) = get_subset_attributes(overlay) {
             subset_attributes.extend(attributes);
         }
     }
@@ -135,20 +135,20 @@ pub fn transform_post(
         }
     }
     for overlay in target_overlays {
-        if let Some(mappings) = get_attribute_mappings(&overlay) {
+        if let Some(mappings) = get_attribute_mappings(overlay) {
             let mut swapped_mappings = BTreeMap::new();
             for (k, v) in mappings {
                 swapped_mappings.insert(v, k);
             }
             attribute_mappings.extend(swapped_mappings);
         }
-        if let Some(mappings) = get_entry_code_mappings(&overlay) {
+        if let Some(mappings) = get_entry_code_mappings(overlay) {
             entry_code_mappings.extend(mappings);
         }
-        if let Some(units) = get_units(&overlay) {
+        if let Some(units) = get_units(overlay) {
             target_units.extend(units);
         }
-        if let Some(attributes) = get_subset_attributes(&overlay) {
+        if let Some(attributes) = get_subset_attributes(overlay) {
             subset_attributes.extend(attributes);
         }
 

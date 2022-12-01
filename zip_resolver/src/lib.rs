@@ -13,7 +13,7 @@ struct ResolvedFile {
 pub fn resolve_from_zip(path: &str) -> Result<OCA, String> {
     let fname = std::path::Path::new(path);
     let file =
-        fs::File::open(&fname).map_err(|e| format!("Error while loading {} file. {}", path, e))?;
+        fs::File::open(fname).map_err(|e| format!("Error while loading {} file. {}", path, e))?;
     let reader = BufReader::new(file);
 
     let mut archive = zip::ZipArchive::new(reader).map_err(|err| err.to_string())?;
