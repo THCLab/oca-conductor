@@ -81,26 +81,26 @@ pub fn transform_pre(
                 }
             }
         }
+    }
 
-        if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
-            transformed_data_set = transformed_data_set
-                .transform_data(
-                    oca,
-                    entry_code_mappings.clone(),
-                    unit_transformation_operations.clone(),
-                )
-                .unwrap()
-        }
+    if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
+        transformed_data_set = transformed_data_set
+            .transform_data(
+                oca,
+                entry_code_mappings.clone(),
+                unit_transformation_operations.clone(),
+            )
+            .unwrap()
+    }
 
-        if !attribute_mappings.is_empty() || !subset_attributes.is_empty() {
-            let mut subset_attributes_op = None;
-            if !subset_attributes.is_empty() {
-                subset_attributes_op = Some(subset_attributes.clone());
-            }
-            transformed_data_set = transformed_data_set
-                .transform_schema(attribute_mappings.clone(), subset_attributes_op)
-                .unwrap();
+    if !attribute_mappings.is_empty() || !subset_attributes.is_empty() {
+        let mut subset_attributes_op = None;
+        if !subset_attributes.is_empty() {
+            subset_attributes_op = Some(subset_attributes.clone());
         }
+        transformed_data_set = transformed_data_set
+            .transform_schema(attribute_mappings.clone(), subset_attributes_op)
+            .unwrap();
     }
     Ok(transformed_data_set)
 }
@@ -164,26 +164,26 @@ pub fn transform_post(
                 }
             }
         }
+    }
 
-        if !attribute_mappings.is_empty() || !subset_attributes.is_empty() {
-            let mut subset_attributes_op = None;
-            if !subset_attributes.is_empty() {
-                subset_attributes_op = Some(subset_attributes.clone());
-            }
-            transformed_data_set = transformed_data_set
-                .transform_schema(attribute_mappings.clone(), subset_attributes_op)
-                .unwrap();
+    if !attribute_mappings.is_empty() || !subset_attributes.is_empty() {
+        let mut subset_attributes_op = None;
+        if !subset_attributes.is_empty() {
+            subset_attributes_op = Some(subset_attributes.clone());
         }
+        transformed_data_set = transformed_data_set
+            .transform_schema(attribute_mappings.clone(), subset_attributes_op)
+            .unwrap();
+    }
 
-        if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
-            transformed_data_set = transformed_data_set
-                .transform_data(
-                    oca,
-                    entry_code_mappings.clone(),
-                    unit_transformation_operations.clone(),
-                )
-                .unwrap()
-        }
+    if !unit_transformation_operations.is_empty() || !entry_code_mappings.is_empty() {
+        transformed_data_set = transformed_data_set
+            .transform_data(
+                oca,
+                entry_code_mappings.clone(),
+                unit_transformation_operations.clone(),
+            )
+            .unwrap()
     }
     Ok(transformed_data_set)
 }
