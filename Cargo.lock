@@ -749,7 +749,7 @@ dependencies = [
 
 [[package]]
 name = "oca_conductor"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "csv",
  "dyn-clone",
@@ -765,7 +765,7 @@ dependencies = [
 
 [[package]]
 name = "oca_zip_resolver"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "oca-rust",
  "serde_json",

@@ -16,7 +16,7 @@ One of the fundamental concepts behind OCA is data harmonization. To harmonize d
 ### Rust
 ```
 [dependencies]
-oca_conductor = "0.2.7"
+oca_conductor = "0.2.8"
 ```
 ### Typescript and JavaScript (Node.JS based)
 
