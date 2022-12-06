@@ -11,6 +11,12 @@ One of the fundamental concepts behind OCA is data harmonization. To harmonize d
 `OCA conductor` is written in Rust thanks to which most C-based languages can be supported by exposing proper FFI-layer. We provide bindings for the following languages:
 - [Typescript/Javascript](/bindings/node.js)
 
+## License
+
+EUPL 1.2 
+
+We have distilled the most crucial license specifics to make your adoption seamless: [see here for details](https://github.com/THCLab/licensing).
+
 ## Installation
 
 ### Rust
