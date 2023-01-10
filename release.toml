@@ -1,5 +1,4 @@
-consolidate-commits=true
-consolidate-pushes=true
+shared-version=true
 publish=false
 tag-name = "v{{version}}"
 pre-release-replacements = [
