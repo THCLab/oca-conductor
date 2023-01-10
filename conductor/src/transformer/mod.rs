@@ -465,7 +465,7 @@ a@a.com;["A"];100"#
   "attributes":["email*","licenses*"],
   "capture_base": "Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
   "digest": "said",
-  "type":"spec/overlays/subset/1.0",
+  "type":"spec/overlays/subset/1.0"
 }
               "#,
             ]);
