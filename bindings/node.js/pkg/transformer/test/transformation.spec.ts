@@ -13,22 +13,22 @@ test@example.com,["a"]`, ','
         ), [
         `
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/mapping/1.0",
-    "attribute_mapping": {
-        "email*":"e-mail*"
-    }
+  "attribute_mapping":{
+    "email*":"e-mail*"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"Em51us0v3CuoYDZqxj4zB37w3lZHRjRyDa7TS9SJOJ7Q",
+  "type":"spec/overlays/mapping/1.0"
 }
         `,
         `
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/entry_code_mapping/1.0",
-    "attribute_entry_codes_mapping": {
-        "licenses*": [
-            "a:A","b:B","c:C","d:D","e:E"
-        ]
-    }
+  "attribute_entry_codes_mapping":{
+    "licenses*":["a:A", "b:B", "c:C", "d:D", "e:E"]
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"EATJjWP-8p01ZHcQX2xB52VmaiMkiwVMG-VfBLyCs9So",
+  "type":"spec/overlays/entry_code_mapping/1.0"
 }
         `
       ])
@@ -49,13 +49,14 @@ test@example.com,["a"]`, ','
     test@example.com`, ','
             ), [
             `
-    {
-        "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-        "type":"spec/overlays/mapping/1.0",
-        "attribute_mapping": {
-            "email*":"e-mail*"
-        }
-    }
+{
+  "attribute_mapping":{
+    "email*":"e-mail*"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"Em51us0v3CuoYDZqxj4zB37w3lZHRjRyDa7TS9SJOJ7Q",
+  "type":"spec/overlays/mapping/1.0"
+}
             `
           ])
       ).to.throw()
@@ -74,22 +75,22 @@ test@example.com,["A"]`, ','
       ).transform([
         `
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/mapping/1.0",
-    "attribute_mapping": {
-        "email*":"email:"
-    }
+  "attribute_mapping":{
+    "email*":"email:"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"EIVz6GUA-74ctvkF-cbuvw97RiHFL6YSs-oO1jsP1amo",
+  "type":"spec/overlays/mapping/1.0"
 }
         `,
         `
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/entry_code_mapping/1.0",
-    "attribute_entry_codes_mapping": {
-        "licenses*": [
-            "A:1","B:2","C:3","D:4","E:5"
-        ]
-    }
+  "attribute_entry_codes_mapping":{
+    "licenses*":["A:1", "B:2", "C:3", "D:4", "E:5"]
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"ECSC1gNDlNjhrTgAVEdB2rZ3puJO-zAX5rv0w3wFOSX4",
+  "type":"spec/overlays/entry_code_mapping/1.0"
 }
         `
       ])

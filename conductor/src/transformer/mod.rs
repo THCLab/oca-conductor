@@ -5,7 +5,6 @@ use crate::errors::GenericError;
 use crate::{validator::ConstraintsConfig, Validator};
 use oca_rust::controller::load_oca;
 use oca_rust::state::oca::{DynOverlay, OCA};
-use said::derivation::SelfAddressing;
 
 pub struct Transformer {
     oca: OCA,
@@ -42,8 +41,7 @@ impl Transformer {
         if let Some(overlays) = overlays {
             let mut additional_overlays: Vec<DynOverlay> = vec![];
 
-            let cb_json = serde_json::to_string(&self.oca.capture_base).unwrap();
-            let oca_cb_sai = format!("{}", SelfAddressing::Blake3_256.derive(cb_json.as_bytes()));
+            let oca_cb_sai = self.oca.capture_base.said.clone();
             for (i, overlay_str) in overlays.iter().enumerate() {
                 match serde_json::from_str::<DynOverlay>(overlay_str) {
                     Ok(mut overlay) => {
@@ -93,8 +91,7 @@ impl Transformer {
         let mut errors = vec![];
         let mut target_overlays: Vec<DynOverlay> = vec![];
 
-        let cb_json = serde_json::to_string(&self.oca.capture_base).unwrap();
-        let oca_cb_sai = format!("{}", SelfAddressing::Blake3_256.derive(cb_json.as_bytes()));
+        let oca_cb_sai = self.oca.capture_base.said.clone();
         for (i, overlay_str) in overlays.iter().enumerate() {
             match serde_json::from_str::<DynOverlay>(overlay_str) {
                 Ok(mut overlay) => {
@@ -178,11 +175,12 @@ test@example.com;["A"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/mapping/1.0",
-    "attribute_mapping": {
-        "email*":"e-mail*"
-    }
+  "attribute_mapping":{
+    "email*":"e-mail*"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"Em51us0v3CuoYDZqxj4zB37w3lZHRjRyDa7TS9SJOJ7Q",
+  "type":"spec/overlays/mapping/1.0"
 }
               "#,
                 ]),
@@ -197,11 +195,12 @@ test2@example.com;["B"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/mapping/1.0",
-    "attribute_mapping": {
-        "email*":"e-mail"
-    }
+  "attribute_mapping":{
+    "email*":"e-mail"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"EMA3cozzd2xO4qXNv0VXAZ7t8wVFA6XV9UPi4l8yknVk",
+  "type":"spec/overlays/mapping/1.0"
 }
               "#,
                 ]),
@@ -231,11 +230,12 @@ test@example.com;["A"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/mapping/1.0",
-    "attribute_mapping": {
-        "email*":"e-mail*"
-    }
+  "attribute_mapping":{
+    "email*":"e-mail*"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"Em51us0v3CuoYDZqxj4zB37w3lZHRjRyDa7TS9SJOJ7Q",
+  "type":"spec/overlays/mapping/1.0"
 }
               "#,
                 ]),
@@ -250,11 +250,12 @@ test2@example.com;["B"]"#
                 Some(vec![
                     r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/mapping/1.0",
-    "attribute_mapping": {
-        "email*":"e-mail"
-    }
+  "attribute_mapping":{
+    "email*":"e-mail"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"EMA3cozzd2xO4qXNv0VXAZ7t8wVFA6XV9UPi4l8yknVk",
+  "type":"spec/overlays/mapping/1.0"
 }
               "#,
                 ]),
@@ -263,11 +264,12 @@ test2@example.com;["B"]"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/mapping/1.0",
-    "attribute_mapping": {
-        "email*":"email:"
-    }
+  "attribute_mapping":{
+    "email*":"email:"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"EIVz6GUA-74ctvkF-cbuvw97RiHFL6YSs-oO1jsP1amo",
+  "type":"spec/overlays/mapping/1.0"
 }
               "#,
             ])
@@ -295,13 +297,12 @@ a@a.com;["a"]"#
             Some(vec![
                 r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/entry_code_mapping/1.0",
-    "attribute_entry_codes_mapping": {
-        "licenses*": [
-            "a:A","b:B","c:C","d:D","e:E"
-        ]
-    }
+  "attribute_entry_codes_mapping":{
+    "licenses*":["a:A", "b:B", "c:C", "d:D", "e:E"]
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"EATJjWP-8p01ZHcQX2xB52VmaiMkiwVMG-VfBLyCs9So",
+  "type":"spec/overlays/entry_code_mapping/1.0"
 }
               "#,
             ]),
@@ -331,13 +332,12 @@ a@a.com;["A"]"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/entry_code_mapping/1.0",
-    "attribute_entry_codes_mapping": {
-        "licenses*": [
-            "A:1","B:2","C:3","D:4","E:5"
-        ]
-    }
+  "attribute_entry_codes_mapping":{
+    "licenses*":["A:1", "B:2", "C:3", "D:4", "E:5"]
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"ECSC1gNDlNjhrTgAVEdB2rZ3puJO-zAX5rv0w3wFOSX4",
+  "type":"spec/overlays/entry_code_mapping/1.0"
 }
               "#,
             ])
@@ -362,10 +362,13 @@ a@a.com;["A"];3.2808"#
             Some(vec![
                 r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/unit/1.0",
-    "metric_system":"IU",
-    "attribute_units":{"number":"ft"}
+  "attribute_units":{
+    "number":"ft"
+  },
+  "capture_base":"Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest":"E_m1qOH9K3m3sK9nV4B3gQjYC7k_lQMJ14QXJzgtNtaI",
+  "metric_system":"IU",
+  "type":"spec/overlays/unit/1.0"
 }
               "#,
             ]),
@@ -395,10 +398,13 @@ a@a.com;["A"];100"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/unit/1.0",
-    "metric_system":"SI",
-    "attribute_units":{"number":"m"}
+  "attribute_units": {
+    "number": "m"
+  },
+  "capture_base": "Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest": "EUMLN2GgAJopClsmoAMnvKTif8xJt-exfrJkOcdOYV_0",
+  "metric_system": "SI",
+  "type": "spec/overlays/unit/1.0"
 }
               "#,
             ])
@@ -422,11 +428,12 @@ a@a.com;["A"];100"#
             ),
             Some(vec![
                 r#"
-    {
-        "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-        "type":"spec/overlays/subset/1.0",
-        "attributes":["email*","licenses*"]
-    }
+{
+  "attributes":["email*","licenses*"],
+  "capture_base": "Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest": "said",
+  "type":"spec/overlays/subset/1.0"
+}
                 "#,
             ]),
         );
@@ -455,9 +462,10 @@ a@a.com;["A"];100"#
             .transform(vec![
                 r#"
 {
-    "capture_base":"EGKvvpidW_ytpxsdiPedznDTHAgoRL2iWBy0d2pfCSW8",
-    "type":"spec/overlays/subset/1.0",
-    "attributes":["email*","licenses*"]
+  "attributes":["email*","licenses*"],
+  "capture_base": "Et7SxuRi_lK6blZmUO3X80Ji5lqMJe7DucrbUmhyzUzk",
+  "digest": "said",
+  "type":"spec/overlays/subset/1.0",
 }
               "#,
             ]);
