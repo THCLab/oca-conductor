@@ -22,7 +22,7 @@ We have distilled the most crucial license specifics to make your adoption seaml
 ### Rust
 ```
 [dependencies]
-oca_conductor = "0.2.8"
+oca_conductor = "0.2.9"
 ```
 ### Typescript and JavaScript (Node.JS based)
 
