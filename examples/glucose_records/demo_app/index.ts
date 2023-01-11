@@ -7,26 +7,31 @@ const oca = resolveFromZip("../oca_bundle.zip")
 const transformer = new Transformer(oca)
 
 const mapping_overlay = `
-{
-        "capture_base":"Ev_RaB-gIOn8VAB3sg40mINxjiYRxdLVQrgce0aZbFcc",
-        "type":"spec/overlays/mapping/1.0",
-        "attribute_mapping":{
-            "first_name":"firstName",
-            "last_name":"surname"
-        }
-    }
-  `
+  {
+    "attribute_mapping": {
+      "firstName": "first_name",
+      "surname": "last_name"
+    },
+    "capture_base": "EzMTX96ZkwRBzkUBI9c8jiXfHa6CfKJyrd6uH6vjIUZc",
+    "digest": "EBfxGsWV4aQGRfRsVH_tDfQCFaBnNqA7cq8YW1Q3DdwA",
+    "type": "spec/overlays/mapping/1.0"
+  }
+`
 
 const unit_overlay = `
-{
-  "capture_base":"Ev_RaB-gIOn8VAB3sg40mINxjiYRxdLVQrgce0aZbFcc",
-  "type":"spec/overlays/unit/1.0",
-  "metric_system":"SI",
-  "attribute_units":{"blood_glucose":"mg/dL"}
-}
-  `
+  {
+    "attribute_units": {
+      "blood_glucose": "mmol/L"
+    },
+    "capture_base": "EzMTX96ZkwRBzkUBI9c8jiXfHa6CfKJyrd6uH6vjIUZc",
+    "digest": "EwpEtyZgBF0B9KXEufQQdeS2aN1GL4JIMcpVRffH3_pg",
+    "metric_system": "nonSI",
+    "type": "spec/overlays/unit/1.0"
+  }
+`
 transformer.addDataSet(
-  new CSVDataSet(data.trimEnd(), ","),
+  new CSVDataSet(data.trimEnd(), ",")
+).transform(
   [mapping_overlay, unit_overlay]
 )
 
