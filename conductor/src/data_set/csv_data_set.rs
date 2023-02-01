@@ -65,6 +65,11 @@ impl DataSet for CSVDataSet {
                     .iter()
                     .enumerate()
                     .map(|(i, v)| {
+                        if let Value::String(v_str) = v {
+                          if v_str.trim().is_empty() {
+                            return Value::Null;
+                          }
+                        }
                         let attribute_name = header_row.get(i).unwrap().to_string();
                         let attribute_type_op = attribute_types.get(&attribute_name);
                         match attribute_type_op {

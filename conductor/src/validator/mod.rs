@@ -83,11 +83,14 @@ impl Validator {
             for (record_index, record) in data_set
                 .load(self.attribute_types.clone())
                 .map_err(|errors| {
-                    errors.iter().map(|_e|
+                    errors.iter().map(|e| {
+                        let e_str = e.to_string();
+                        let splitted: Vec<&str> = e_str.split(": ").collect();
+                        let empty_str = "";
                         ValidationError::new(
-                            "".to_string(), "".to_string(), "".to_string(), "".to_string()
+                            data_set_index.to_string(), "".to_string(), splitted.get(0).unwrap_or(&empty_str).to_string(), splitted.get(1).unwrap_or(&empty_str).to_string()
                         )
-                    ).collect::<Vec<ValidationError>>()
+                    }).collect::<Vec<ValidationError>>()
                 })?
                 .iter()
                 .enumerate()
