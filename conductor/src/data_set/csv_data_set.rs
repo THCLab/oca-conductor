@@ -66,9 +66,9 @@ impl DataSet for CSVDataSet {
                     .enumerate()
                     .map(|(i, v)| {
                         if let Value::String(v_str) = v {
-                          if v_str.trim().is_empty() {
-                            return Value::Null;
-                          }
+                            if v_str.trim().is_empty() {
+                                return Value::Null;
+                            }
                         }
                         let attribute_name = header_row.get(i).unwrap().to_string();
                         let attribute_type_op = attribute_types.get(&attribute_name);
@@ -76,10 +76,8 @@ impl DataSet for CSVDataSet {
                             Some(attribute_type) => match Self::parse_value(v, attribute_type) {
                                 Ok(parsed) => parsed,
                                 Err(e) => {
-                                    errors.push(GenericError::from(format!(
-                                        "{}: {}",
-                                        attribute_name, e
-                                    )));
+                                    errors
+                                        .push(GenericError::from(format!("{attribute_name}: {e}")));
                                     Value::Null
                                 }
                             },
@@ -248,7 +246,7 @@ impl CSVDataSet {
                         .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("\"{}\" value is not an array", value_str))
+                            GenericError::from(format!("\"{value_str}\" value is not an array"))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "Text")?)
@@ -262,7 +260,7 @@ impl CSVDataSet {
                         .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("\"{}\" value is not an array", value_str))
+                            GenericError::from(format!("\"{value_str}\" value is not an array"))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "Numeric")?)
@@ -276,7 +274,7 @@ impl CSVDataSet {
                         .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("\"{}\" value is not an array", value_str))
+                            GenericError::from(format!("\"{value_str}\" value is not an array"))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "Boolean")?)
@@ -290,7 +288,7 @@ impl CSVDataSet {
                         .unwrap_or_else(|_| Value::String(value_str.to_string()))
                         .as_array()
                         .ok_or_else(|| {
-                            GenericError::from(format!("\"{}\" value is not an array", value_str))
+                            GenericError::from(format!("\"{value_str}\" value is not an array"))
                         })?
                     {
                         parsed.push(Self::parse_value(v, "DateTime")?)
@@ -316,7 +314,7 @@ mod tests {
     fn setup_oca() -> OCA {
         let common_assets_dir_path = format!("{}/../assets", env!("CARGO_MANIFEST_DIR"));
         let oca_result = oca_zip_resolver::resolve_from_zip(
-            format!("{}/oca_bundle.zip", common_assets_dir_path).as_str(),
+            format!("{common_assets_dir_path}/oca_bundle.zip").as_str(),
         );
         assert!(oca_result.is_ok());
         oca_result.unwrap()

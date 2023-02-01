@@ -13,19 +13,25 @@ pub struct ValidationError {
     pub data_set: String,
     pub record: String,
     pub attribute_name: String,
-    pub message: String
+    pub message: String,
 }
 
 impl ValidationError {
     pub fn new(data_set: String, record: String, attribute_name: String, message: String) -> Self {
-        Self { data_set, record, attribute_name, message }
+        Self {
+            data_set,
+            record,
+            attribute_name,
+            message,
+        }
     }
 }
 
 impl std::error::Error for ValidationError {}
 impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f,
+        write!(
+            f,
             "Data Set: {}, Record {}: '{}' {}",
             self.data_set, self.record, self.attribute_name, self.message
         )
@@ -83,14 +89,20 @@ impl Validator {
             for (record_index, record) in data_set
                 .load(self.attribute_types.clone())
                 .map_err(|errors| {
-                    errors.iter().map(|e| {
-                        let e_str = e.to_string();
-                        let splitted: Vec<&str> = e_str.split(": ").collect();
-                        let empty_str = "";
-                        ValidationError::new(
-                            data_set_index.to_string(), "".to_string(), splitted.get(0).unwrap_or(&empty_str).to_string(), splitted.get(1).unwrap_or(&empty_str).to_string()
-                        )
-                    }).collect::<Vec<ValidationError>>()
+                    errors
+                        .iter()
+                        .map(|e| {
+                            let e_str = e.to_string();
+                            let splitted: Vec<&str> = e_str.split(": ").collect();
+                            let empty_str = "";
+                            ValidationError::new(
+                                data_set_index.to_string(),
+                                "".to_string(),
+                                splitted.get(0).unwrap_or(&empty_str).to_string(),
+                                splitted.get(1).unwrap_or(&empty_str).to_string(),
+                            )
+                        })
+                        .collect::<Vec<ValidationError>>()
                 })?
                 .iter()
                 .enumerate()
@@ -101,19 +113,22 @@ impl Validator {
 
                     let attribute_validator = self.attribute_validators.get(k).ok_or_else(|| {
                         ValidationError::new(
-                            data_set_index.to_string(), record_index.to_string(), k.to_string(),
-                            "unknown_attribute".to_string()
+                            data_set_index.to_string(),
+                            record_index.to_string(),
+                            k.to_string(),
+                            "unknown_attribute".to_string(),
                         )
                     });
                     match attribute_validator {
                         Ok(validator) => {
                             if let Err(errors) = Validator::validate_value(v, validator) {
                                 for error in errors {
-                                    validation_errors.push(
-                                        ValidationError::new(
-                                            data_set_index.to_string(), record_index.to_string(), k.to_string(), error
-                                        )
-                                    );
+                                    validation_errors.push(ValidationError::new(
+                                        data_set_index.to_string(),
+                                        record_index.to_string(),
+                                        k.to_string(),
+                                        error,
+                                    ));
                                 }
                             }
                         }
@@ -128,12 +143,12 @@ impl Validator {
                     }
                 }
                 for missing_attribute_name in missing_attribute_names {
-                    validation_errors.push(
-                        ValidationError::new(
-                            data_set_index.to_string(), record_index.to_string(), missing_attribute_name.to_string(),
-                            "missing_attribute".to_string()
-                        )
-                    );
+                    validation_errors.push(ValidationError::new(
+                        data_set_index.to_string(),
+                        record_index.to_string(),
+                        missing_attribute_name.to_string(),
+                        "missing_attribute".to_string(),
+                    ));
                 }
             }
         }
@@ -145,10 +160,7 @@ impl Validator {
         }
     }
 
-    fn validate_value(
-        value: &Value,
-        validator: &AttributeValidator,
-    ) -> Result<(), Vec<String>> {
+    fn validate_value(value: &Value, validator: &AttributeValidator) -> Result<(), Vec<String>> {
         let mut errors = vec![];
 
         if let Some(ref conformance) = validator.conformance {
@@ -327,7 +339,8 @@ impl Validator {
                             Some(ov.attribute_conformance.get(attr_name).unwrap().to_string())
                     } else if overlay.overlay_type().contains("/format/") {
                         let ov = overlay.as_any().downcast_ref::<overlay::Format>().unwrap();
-                        validator.format = Some(ov.attribute_formats.get(attr_name).unwrap().to_string())
+                        validator.format =
+                            Some(ov.attribute_formats.get(attr_name).unwrap().to_string())
                     } else if overlay.overlay_type().contains("/entry_code/") {
                         let ov = overlay
                             .as_any()
@@ -375,7 +388,7 @@ mod tests {
 "bool": true,
 "bools": [false, true]
       }"#
-                .to_string(),
+            .to_string(),
         ));
         let validation_result = validator.validate();
         assert!(validation_result.is_ok());

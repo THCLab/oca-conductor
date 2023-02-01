@@ -13,7 +13,7 @@ struct ResolvedFile {
 pub fn resolve_from_zip(path: &str) -> Result<OCA, String> {
     let fname = std::path::Path::new(path);
     let file =
-        fs::File::open(fname).map_err(|e| format!("Error while loading {} file. {}", path, e))?;
+        fs::File::open(fname).map_err(|e| format!("Error while loading {path} file. {e}"))?;
     let reader = BufReader::new(file);
 
     let mut archive = zip::ZipArchive::new(reader).map_err(|err| err.to_string())?;
@@ -47,8 +47,7 @@ pub fn resolve_from_zip(path: &str) -> Result<OCA, String> {
 
     if let serde_json::Value::Null = resolved_file.meta {
         return Err(format!(
-            "Malformed OCA Bundle ({}). Missing meta.json file.",
-            path
+            "Malformed OCA Bundle ({path}). Missing meta.json file."
         ));
     }
 
@@ -59,7 +58,7 @@ pub fn resolve_from_zip(path: &str) -> Result<OCA, String> {
         .ok_or("Missing 'root' attribute in meta.json file")
         .map_err(|e| e.to_string())?
     {
-        let root_filename = format!("{}.json", root_sai);
+        let root_filename = format!("{root_sai}.json");
         let root_file_content = resolved_file.files.remove(&root_filename).ok_or(format!(
             "Malformed OCA Bundle ({}). Missing {} file.",
             path, &root_filename
@@ -95,7 +94,7 @@ mod tests {
     #[test]
     fn resolve_from_proper_flat_oca_bundle_is_ok() {
         let common_assets_dir_path = format!("{}/../assets", env!("CARGO_MANIFEST_DIR"));
-        let path = format!("{}/oca_bundle.zip", common_assets_dir_path);
+        let path = format!("{common_assets_dir_path}/oca_bundle.zip");
         let oca_result = resolve_from_zip(path.as_str());
         assert!(oca_result.is_ok());
     }

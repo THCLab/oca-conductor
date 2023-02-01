@@ -1,8 +1,8 @@
 use crate::data_set::DataSet;
 use crate::errors::GenericError;
 use serde::{Serialize, Serializer};
-use std::collections::BTreeMap;
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 #[cfg(feature = "transformer")]
 use crate::transformer::data_set_transformer::Operation;
@@ -34,13 +34,14 @@ impl DataSet for JSONDataSet {
         self.raw.clone()
     }
 
-    fn load(&self, _attribute_types: BTreeMap<String, String>) -> Result<Vec<Value>, Vec<GenericError>> {
+    fn load(
+        &self,
+        _attribute_types: BTreeMap<String, String>,
+    ) -> Result<Vec<Value>, Vec<GenericError>> {
         match serde_json::from_str(&self.raw).unwrap_or(Value::Null) {
             Value::Array(data_set_array) => Ok(data_set_array),
             Value::Object(data_set_object) => Ok(vec![Value::Object(data_set_object)]),
-            _ => {
-                Ok(vec![])
-            }
+            _ => Ok(vec![]),
         }
     }
 
@@ -111,10 +112,8 @@ impl DataSet for JSONDataSet {
             transformed_data_set.push(Value::Object(transformed_data));
         }
 
-        Ok(
-            Self::new(
-                serde_json::to_string(&Value::Array(transformed_data_set)).unwrap(),
-            )
-        )
+        Ok(Self::new(
+            serde_json::to_string(&Value::Array(transformed_data_set)).unwrap(),
+        ))
     }
 }
