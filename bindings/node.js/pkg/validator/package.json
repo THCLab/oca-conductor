@@ -1,6 +1,6 @@
 {
   "name": "oca-data-validator",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "Node bindings to oca-conductor validator (Rust)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
