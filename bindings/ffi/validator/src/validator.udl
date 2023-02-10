@@ -1,0 +1,23 @@
+namespace validator {
+};
+
+[Error]
+interface ValidationError {
+  Other(string data_set, string record, string attribute_name, string message);
+};
+
+[Error]
+interface ValidationErrors {
+  List(sequence<ValidationError> errors);
+};
+
+dictionary ConstraintsConfig {
+  boolean fail_on_additional_attributes;
+};
+
+interface Validator {
+  constructor(string oca);
+  void set_constraints(ConstraintsConfig config);
+  [Throws=ValidationErrors]
+  void validate(string record);
+};

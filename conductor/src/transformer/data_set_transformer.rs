@@ -6,8 +6,8 @@ use std::collections::BTreeMap;
 pub fn transform_pre(
     oca: &OCA,
     additional_overlays: Vec<DynOverlay>,
-    data_set: Box<dyn DataSet>,
-) -> Result<Box<dyn DataSet>, Vec<String>> {
+    data_set: Box<dyn DataSet + Sync + Send>,
+) -> Result<Box<dyn DataSet + Sync + Send>, Vec<String>> {
     let mut attribute_mappings: BTreeMap<String, String> = BTreeMap::new();
     let mut entry_code_mappings: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
     let mut target_units: BTreeMap<String, String> = BTreeMap::new();

@@ -50,7 +50,7 @@ impl DataSet for JSONDataSet {
         &self,
         _mappings: BTreeMap<String, String>,
         _subset_attributes_op: Option<Vec<String>>,
-    ) -> Result<Box<dyn DataSet>, GenericError> {
+    ) -> Result<Box<dyn DataSet + Sync + Send>, GenericError> {
         // TODO
         Ok(Self::new(self.raw.clone()))
     }
@@ -61,7 +61,7 @@ impl DataSet for JSONDataSet {
         oca: &OCA,
         entry_code_mappings: BTreeMap<String, BTreeMap<String, String>>,
         unit_transformation_operations: BTreeMap<String, Vec<Operation>>,
-    ) -> Result<Box<dyn DataSet>, Vec<GenericError>> {
+    ) -> Result<Box<dyn DataSet + Sync + Send>, Vec<GenericError>> {
         // TODO
         let mut transformed_data_set = vec![];
 

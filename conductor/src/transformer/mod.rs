@@ -32,7 +32,7 @@ impl Transformer {
 
     pub fn add_data_set(
         &mut self,
-        data_set: Box<dyn DataSet>,
+        data_set: Box<dyn DataSet + Sync + Send>,
         overlays: Option<Vec<&str>>,
     ) -> Result<&mut Self, Vec<GenericError>> {
         let mut errors = vec![];

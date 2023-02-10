@@ -27,14 +27,14 @@ pub trait DataSet: erased_serde::Serialize + dyn_clone::DynClone {
         &self,
         mappings: BTreeMap<String, String>,
         subset_attributes_op: Option<Vec<String>>,
-    ) -> Result<Box<dyn DataSet>, GenericError>;
+    ) -> Result<Box<dyn DataSet + Sync + Send>, GenericError>;
     #[cfg(feature = "transformer")]
     fn transform_data(
         &self,
         oca: &OCA,
         entry_code_mappings: BTreeMap<String, BTreeMap<String, String>>,
         unit_transformation_operations: BTreeMap<String, Vec<Operation>>,
-    ) -> Result<Box<dyn DataSet>, Vec<GenericError>>;
+    ) -> Result<Box<dyn DataSet + Sync + Send>, Vec<GenericError>>;
 
     fn get_raw(&self) -> String;
 

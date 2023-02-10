@@ -2,6 +2,7 @@ use oca_rust::state::{attribute::AttributeType, entry_codes::EntryCodes, oca::ov
 use regex::Regex;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 
 mod attribute_validator;
 use attribute_validator::AttributeValidator;
@@ -39,8 +40,8 @@ impl std::fmt::Display for ValidationError {
 }
 
 pub struct Validator {
-    pub data_sets: Vec<Box<dyn DataSet>>,
-    constraints_config: Option<ConstraintsConfig>,
+    pub data_sets: Vec<Box<dyn DataSet + Sync + Send>>,
+    constraints_config: Option<Arc<ConstraintsConfig>>,
     attribute_validators: HashMap<String, AttributeValidator>,
     attribute_types: BTreeMap<String, String>,
 }
@@ -61,10 +62,10 @@ impl Validator {
     }
 
     pub fn set_constraints(&mut self, config: ConstraintsConfig) {
-        self.constraints_config = Some(config);
+        self.constraints_config = Some(Arc::new(config));
     }
 
-    pub fn add_data_set(&mut self, data_set: Box<dyn DataSet>) -> &mut Self {
+    pub fn add_data_set(&mut self, data_set: Box<dyn DataSet + Sync + Send>) -> &mut Self {
         self.data_sets.push(data_set);
         self
     }

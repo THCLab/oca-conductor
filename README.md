@@ -35,6 +35,92 @@ oca_conductor = "0.2.11"
   npm i oca-data-validator
   ```
 
+### Python (validator)
+
+> Prerequisites:  
+> Install Rust - https://www.rust-lang.org
+
+Clone repository and go to `bindings/ffi/validator` directory
+
+```
+git clone https://github.com/THCLab/oca-conductor.git
+cd bindings/ffi/validator
+```
+
+Run
+```
+cargo build --release --features validator
+cargo run --bin uniffi-bindgen generate src/validator.udl -l python
+cp target/release/libvalidator.so src/libuniffi_validator.so
+```
+
+All you need are `validator.py` and `libuniffi_validator.so` files from `src` directory.
+
+Example usage:
+```python
+from validator import *
+
+oca_str = """
+{
+  "capture_base": {
+    "attributes": {
+      "n1": "Text",
+      "n2": "Numeric"
+    },
+    "classification": "",
+    "digest": "ElNWOR0fQbv_J6EL0pJlvCxEpbu4bg1AurHgr_0A7LKc",
+    "flagged_attributes": [],
+    "type": "spec/capture_base/1.0"
+  },
+  "overlays": [
+    {
+      "attribute_entry_codes": {
+        "n1": ["op1", "op2"]
+      },
+      "capture_base": "ElNWOR0fQbv_J6EL0pJlvCxEpbu4bg1AurHgr_0A7LKc",
+      "digest": "E4L-BukSBsqZoDDIJvw4_gGjAJs5It4UUfiA200lGup0",
+      "type": "spec/overlays/entry_code/1.0"
+    },
+    {
+      "attribute_conformance": {
+        "n1": "M"
+      },
+      "capture_base": "ElNWOR0fQbv_J6EL0pJlvCxEpbu4bg1AurHgr_0A7LKc",
+      "digest": "E4L-BukSBsqZoDDIJvw4_gGjAJs5It4UUfiA200lGup0",
+      "type": "spec/overlays/conformance/1.0"
+    }
+  ]
+}
+"""
+
+validator = Validator(oca_str)
+
+validator.set_constraints(ConstraintsConfig(fail_on_additional_attributes=True))
+
+try:
+    validator.validate(
+    """
+    [
+        {
+            "n1": "op",
+            "additional": 1
+        },
+        {
+            "n2": 2
+        }
+    ]
+    """
+    )
+except ValidationErrors.List as error_list:
+    for error in error_list.errors:
+        print(error)
+
+# Result:
+# ValidationError.Other(data_set='0', record='0', attribute_name='n1', message='\'n1\' value ("op") must be one of ["op1", "op2"]')
+# ValidationError.Other(data_set='0', record='0', attribute_name='additional', message='unknown_attribute')
+# ValidationError.Other(data_set='0', record='1', attribute_name='n1', message='missing_attribute')
+```
+
 ## Transformation overlays
 
 ### Attribute Mapping Overlay

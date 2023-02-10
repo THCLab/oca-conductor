@@ -99,7 +99,7 @@ impl DataSet for CSVDataSet {
         &self,
         mappings: BTreeMap<String, String>,
         subset_attributes_op: Option<Vec<String>>,
-    ) -> Result<Box<dyn DataSet>, GenericError> {
+    ) -> Result<Box<dyn DataSet + Sync + Send>, GenericError> {
         let mut transformed_raw = self.raw.clone();
         if let Some(header_line) = transformed_raw.lines().take(1).next() {
             let mut headers = header_line
@@ -147,7 +147,7 @@ impl DataSet for CSVDataSet {
         oca: &OCA,
         entry_code_mappings: BTreeMap<String, BTreeMap<String, String>>,
         unit_transformation_operations: BTreeMap<String, Vec<Operation>>,
-    ) -> Result<Box<dyn DataSet>, Vec<GenericError>> {
+    ) -> Result<Box<dyn DataSet + Sync + Send>, Vec<GenericError>> {
         let mut transformed_data_set = vec![];
 
         for record in self.load(oca.capture_base.attributes.clone())? {
