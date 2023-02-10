@@ -5,7 +5,7 @@ use oca_conductor::data_set::{DataSet, JSONDataSet};
 use oca_conductor::validator::ConstraintsConfig;
 use oca_conductor::validator::ValidationError;
 use oca_conductor::Validator;
-use oca_rust::state::oca::OCA;
+use oca_rs::state::oca::OCA;
 
 #[napi(js_name = "Validator")]
 pub struct ValidatorWrapper {

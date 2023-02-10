@@ -1,4 +1,4 @@
-use oca_rust::state::oca::OCA;
+use oca_rs::state::oca::OCA;
 use std::collections::HashMap;
 use std::fs;
 use std::io::BufReader;
@@ -74,7 +74,7 @@ pub fn resolve_from_zip(path: &str) -> Result<OCA, String> {
                 .join(",")
         );
 
-        let oca_builder = oca_rust::controller::load_oca(&mut data.as_bytes()).unwrap();
+        let oca_builder = oca_rs::controller::load_oca(&mut data.as_bytes()).unwrap();
         oca_option = Some(oca_builder.finalize());
     }
 

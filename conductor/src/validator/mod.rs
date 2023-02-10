@@ -1,4 +1,4 @@
-use oca_rust::state::{attribute::AttributeType, entry_codes::EntryCodes, oca::overlay, oca::OCA};
+use oca_rs::state::{attribute::AttributeType, entry_codes::EntryCodes, oca::overlay, oca::OCA};
 use regex::Regex;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};

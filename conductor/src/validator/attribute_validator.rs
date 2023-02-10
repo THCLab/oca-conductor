@@ -1,4 +1,4 @@
-use oca_rust::state::{attribute::AttributeType, encoding::Encoding, entry_codes::EntryCodes};
+use oca_rs::state::{attribute::AttributeType, encoding::Encoding, entry_codes::EntryCodes};
 
 pub struct AttributeValidator {
     pub attribute_name: String,

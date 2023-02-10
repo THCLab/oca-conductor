@@ -731,19 +731,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "oca-rust"
-version = "0.2.22"
+name = "oca-rs"
+version = "0.2.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4246e60958cf5d5e8f8edc382ba3afe91370bc432379e99eb10b874af7b4d61"
+checksum = "51df702af60787aef6ef99f7f6c4c8882ff5dbb08c61938b3a01176845f69425"
 dependencies = [
  "erased-serde",
  "indexmap",
+ "lazy_static",
  "regex",
  "said",
  "serde",
  "serde-value",
  "serde_json",
  "serde_yaml",
+ "urn",
  "wasm-bindgen",
 ]
 
@@ -754,7 +756,7 @@ dependencies = [
  "csv",
  "dyn-clone",
  "erased-serde",
- "oca-rust",
+ "oca-rs",
  "oca_zip_resolver",
  "regex",
  "reqwest",
@@ -766,7 +768,7 @@ dependencies = [
 name = "oca_zip_resolver"
 version = "0.2.11"
 dependencies = [
- "oca-rust",
+ "oca-rs",
  "serde_json",
  "zip",
 ]
@@ -1375,6 +1377,12 @@ dependencies = [
  "idna",
  "percent-encoding",
 ]
+
+[[package]]
+name = "urn"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67eaf234b821412d224e5853b50374f6250b5bad13016bc7897952a99c8d011e"
 
 [[package]]
 name = "vcpkg"

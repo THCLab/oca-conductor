@@ -3,7 +3,7 @@ pub use oca_conductor::data_set::JSONDataSet;
 pub use oca_conductor::errors::GenericError;
 pub use oca_conductor::validator::{ConstraintsConfig, Validator as ValidatorRaw};
 
-use oca_rust::controller::load_oca;
+use oca_rs::controller::load_oca;
 use std::sync::RwLock;
 
 #[derive(Debug)]

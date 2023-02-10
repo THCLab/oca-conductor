@@ -5,7 +5,7 @@ use napi_derive::napi;
 use crate::{DataSetType, DataSetLoaderRouter};
 use oca_conductor::data_set::{DataSet, CSVDataSet};
 use oca_conductor::Transformer;
-use oca_rust::state::oca::OCA;
+use oca_rs::state::oca::OCA;
 
 #[napi(js_name = "Transformer")]
 pub struct TransformerWrapper {

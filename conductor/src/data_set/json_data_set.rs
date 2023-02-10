@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 #[cfg(feature = "transformer")]
 use crate::transformer::data_set_transformer::Operation;
 #[cfg(feature = "transformer")]
-use oca_rust::state::oca::OCA;
+use oca_rs::state::oca::OCA;
 #[cfg(feature = "transformer")]
 use serde_json::Map;
 

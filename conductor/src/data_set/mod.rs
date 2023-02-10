@@ -7,7 +7,7 @@ use crate::transformer::data_set_transformer::{OpType, Operation};
 pub use csv_data_set::CSVDataSet;
 pub use json_data_set::JSONDataSet;
 #[cfg(feature = "transformer")]
-use oca_rust::state::oca::OCA;
+use oca_rs::state::oca::OCA;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
