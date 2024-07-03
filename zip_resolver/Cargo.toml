@@ -9,5 +9,5 @@ license = "EUPL-1.2"
 
 [dependencies]
 oca-rs = "= 0.2.29"
-serde_json = "1.0.82"
-zip = "0.6.2"
+serde_json = "= 1.0.82"
+zip = "= 0.6.2"
