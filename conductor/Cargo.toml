@@ -1,7 +1,7 @@
 [package]
 name = "oca_conductor"
 description = "Lib for validating or tranforming data captured with OCA"
-version = "0.2.12"
+version = "0.2.13"
 edition = "2021"
 license = "EUPL-1.2"
 
