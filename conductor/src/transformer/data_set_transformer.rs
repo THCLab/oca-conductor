@@ -211,7 +211,7 @@ impl Operation {
 fn get_operations(source_unit: String, target_unit: String) -> Result<Vec<Operation>, Vec<String>> {
     let mut operations = vec![];
 
-    let request_url = format!("https://repository.oca.argo.colossi.network/api/v0.1/transformations/units?source={}&target={}",
+    let request_url = format!("https://repository-old.oca.argo.colossi.network/api/v0.1/transformations/units?source={}&target={}",
             source_unit, target_unit);
     let response = reqwest::blocking::get(&request_url);
     match response {
